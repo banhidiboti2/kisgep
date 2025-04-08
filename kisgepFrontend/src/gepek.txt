@@ -1,0 +1,46 @@
+12 építőipari kisgép:  
+
+1. **Sarokcsiszoló (Flex)**  
+2. **Fúró-csavarozó**  
+3. **Vésőgép (bontókalapács)**  
+4. **Betonkeverő**  
+5. **Lézeres szintező**  
+6. **Hőlégfúvó**  
+7. **Magasnyomású mosó**  
+8. **Rezgőcsiszoló**  
+9. **Körfűrész**  
+10. **Kompresszor**  
+11. **Gérvágó fűrész**  
+12. **Dömper (kisméretű, elektromos vagy benzines)**  
+
+12 kerti kisgép:  
+
+1. **Fűnyíró**  
+2. **Fűkasza (szegélynyíró)**  
+3. **Lombfúvó**  
+4. **Rönkhasító**  
+5. **Sövénynyíró**  
+6. **Ágaprító**  
+7. **Permetezőgép**  
+8. **Talajfúró**  
+9. **Szivattyú**  
+10. **Gyepszellőztető**  
+11. **Magassági Ágvágó**  
+12. ****  
+
+12 fa- és fémipari kisgép:  
+
+### **Faipari kisgépek:**  
+1. **Dekopírfűrész**  
+2. **Asztali körfűrész**  
+3. **Gyalu**  
+4. **Marógép (felsőmaró)**  
+5. **Szalagfűrész**  
+6. **Csiszológép (rezgőcsiszoló, szalagcsiszoló)**   
+7. ** **  
+8. **Oszlopos fúrógép**  
+9. **Plazmavágó**  
+10. **Hegesztőgép (MIG/MAG, TIG, MMA)**  
+11. **Lemezolló (kézi vagy gépi)**  
+12. **Esztergagép (asztali kiseszterga)**  
+
