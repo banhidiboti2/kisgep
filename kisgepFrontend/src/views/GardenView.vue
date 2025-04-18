@@ -5,16 +5,24 @@
       <router-link to="/" class="back-button">Vissza</router-link>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
+    <div v-if="loading" class="text-center py-8">
+      <p>Betöltés...</p>
+    </div>
+
+    <div v-else-if="error" class="text-center py-8 text-red-600">
+      <p>{{ error }}</p>
+    </div>
+
+    <div v-else class="grid grid-cols-3 gap-4">
       <div v-for="(item, index) in items" :key="index" class="product-container bg-white rounded shadow hover:shadow-md transition-shadow">
         <div class="product-inner border border-gray-300 p-4 text-center h-full flex flex-col">
           <div class="img-wrapper">
-            <img :src="item.image" alt="Gép" class="product-image">
+            <img :src="getProductImage(item)" alt="Gép" class="product-image">
           </div>
           <div class="product-details">
-            <p class="font-semibold">{{ item.name }}</p>
-            <p>{{ item.description }}</p>
-            <p>Ár: {{ item.price }} Ft</p>
+            <p class="font-semibold">{{ item.name || item.nev }}</p>
+            <p>{{ item.description || item.leiras }}</p>
+            <p>Ár: {{ item.price || item.ar }} Ft</p>
           </div>
           <button @click="addToBasket(item)" class="button mt-auto">Kosárba</button>
         </div>
@@ -23,7 +31,7 @@
   </div>
 </template>
   
-  <script>
+<script>
 import fuyniro from '@/photos/funyiro.png';
 import fukasza from '@/photos/fukasza.png';
 import lombfuvo from '@/photos/lombfuvo.png';
@@ -43,114 +51,105 @@ export default {
   name: 'GardenView',
   data() {
     return {
-      items: [
-        {
-          image: fuyniro,
-          name: 'Fűnyíró',
-          description: 'Gyártó: Atlas',
-          price: 6000
-        },
-        {
-          image: fukasza,
-          name: 'Fűkasza',
-          description: 'Gyártó: Stihl',
-          price: 5000
-        },
-        {
-          image: lombfuvo,
-          name: 'Lombfúvó',
-          description: 'Gyártó: Stihl',
-          price: 3000
-        },
-        {
-          image: ronkhasito,
-          name: 'Rönkhasító',
-          description: 'Gyártó: Cub Cadet',
-          price: 15000
-        },
-        {
-          image: sovenynyiro,
-          name: 'Sövénynyíró',
-          description: 'Gyártó: Ryobi',
-          price: 3000
-        },
-        {
-          image: agaprito,
-          name: 'Ágaprító',
-          description: 'Gyártó: Cub Cadet',
-          price: 4000
-        },
-        {
-          image: permetezo,
-          name: 'Permetező',
-          description: 'Gyártó: Firman',
-          price: 2000
-        },
-        {
-          image: talajfuro,
-          name: 'Talajfúró',
-          description: 'Gyártó: Stihl',
-          price: 7000
-        },
-        {
-          image: szivattyu,
-          name: 'Szivattyú',
-          description: 'Gyártó: Firman',
-          price: 6000
-        },
-        {
-          image: gyepszellozteto,
-          name: 'Gyepszellőztető',
-          description: 'Gyártó: Ryan',
-          price: 5000
-        },
-        {
-          image: magassagi,
-          name: 'Magassági Ágvágó',
-          description: 'Gyártó: Ryobi',
-          price: 4000
-        },
-        {
-          image: tuskomaro,
-          name: 'Tuskómaró',
-          description: 'Gyártó: Cub Cadet',
-          price: 9000
-        },
-      ],
-      basket: JSON.parse(localStorage.getItem('basket')) || []
-      };
-    },
-    methods: {
-    addToBasket(item) {
-      this.basket.push(item);
-      localStorage.setItem('basket', JSON.stringify(this.basket));
-    },
-    /*
-    fetchProducts() {
-      axios.get('/termekek')
-        .then(response => {
-          this.items = response.data;
-        })
-        .catch(error => {
-          console.error('Error fetching products:', error);
-        });
-    },
-    */
-    
+      items: [],
+      basket: JSON.parse(localStorage.getItem('basket')) || [],
+      loading: true,
+      error: null,
+      defaultImages: {
+        'Fűnyíró': fuyniro,
+        'Fűkasza': fukasza,
+        'Lombfúvó': lombfuvo,
+        'Rönkhasító': ronkhasito,
+        'Sövénynyíró': sovenynyiro,
+        'Ágaprító': agaprito,
+        'Permetező': permetezo,
+        'Talajfúró': talajfuro,
+        'Szivattyú': szivattyu,
+        'Gyepszellőztető': gyepszellozteto,
+        'Magassági Ágvágó': magassagi,
+        'Tuskómaró': tuskomaro
+      }
+    };
   },
-  /*
+  methods: {
+    addToBasket(item) {
+    // Create a copy of the item with consistent property names and add image
+    const basketItem = {
+      id: item.id,
+      name: item.name || item.nev,
+      description: item.description || item.leiras,
+      price: item.price || item.ar,
+      image: item.image_url || this.getProductImage(item)
+    };
+    
+    this.basket.push(basketItem);
+    localStorage.setItem('basket', JSON.stringify(this.basket));
+    
+    // Show confirmation to user
+    alert('Termék hozzáadva a kosárhoz!');
+  },
+    
+  fetchProducts() {
+  this.loading = true;
+  this.error = null;
+
+  axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
+    .then(response => {
+      console.log('API Response:', response.data);
+      // Check if data is an array and maintain the specific slice for garden products (12-24)
+      if (Array.isArray(response.data)) {
+        this.items = response.data.slice(12, 24);
+      } else if (response.data.data && Array.isArray(response.data.data)) {
+        // Handle wrapped data format if needed
+        this.items = response.data.data.slice(12, 24);
+      } else {
+        console.error('Unexpected data format:', response.data);
+        this.error = 'Váratlan adatformátum az API válaszában';
+      }
+      this.loading = false;
+    })
+    .catch(error => {
+      console.error('Error fetching products:', error);
+      this.error = 'Hiba történt a termékek betöltése közben.';
+      this.loading = false;
+    });
+},
+    
+    getProductImage(item) {
+      // First check if the API provides an image URL
+      if (item.image_url) {
+        return item.image_url;
+      }
+      
+      const name = item.name || item.nev;
+      
+      // Check exact match
+      if (name && this.defaultImages[name]) {
+        return this.defaultImages[name];
+      }
+      
+      // Check partial match (e.g., if name is "Fűnyíró Gép" but key is just "Fűnyíró")
+      for (const key in this.defaultImages) {
+        if (name && name.includes(key)) {
+          return this.defaultImages[key];
+        }
+      }
+      
+      // Return a fallback image
+      return fuyniro; // First image as default fallback
+    },
+  },
+  
   created() {
     this.fetchProducts();
   }
-  */
-  };
-
+};
 </script>
   
 <style scoped>
+/* All styles remain the same */
 .product-container {
   transition: transform 0.2s;
-
 }
 
 .product-inner {

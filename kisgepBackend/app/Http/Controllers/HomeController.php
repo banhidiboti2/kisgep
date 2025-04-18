@@ -3,19 +3,27 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Termek;
-use App\Models\Kategoria;
+use Illuminate\Routing\Controller;
 
 class HomeController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
+     * Show the application dashboard.
+     *
+     * @return \Illuminate\Contracts\Support\Renderable
+     */
     public function index()
     {
-        // Eheti legnépszerűbb két termék lekérdezése
-        $nepszeruTermekek = Termek::orderBy('nepszeruseg', 'desc')->take(2)->get();
-        
-        // Kategóriák betöltése
-        $kategoriak = Kategoria::all();
-        
-        return view('home', compact('nepszeruTermekek', 'kategoriak'));
+        return view('home');
     }
 }

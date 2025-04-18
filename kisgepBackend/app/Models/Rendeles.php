@@ -14,7 +14,7 @@ class Rendeles extends Model
      *
      * @var string
      */
-    protected $table = 'rendelesek';
+    protected $table = 'rendeles';
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +26,7 @@ class Rendeles extends Model
         'teljes_osszeg',
         'statusz',
         'megjegyzes',
+        'rendeles_azonosito',
     ];
 
     /**

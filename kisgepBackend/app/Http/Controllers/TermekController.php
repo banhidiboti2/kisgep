@@ -1,29 +1,67 @@
 <?php
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Termek;
-use App\Models\Kategoria;
+use Illuminate\Http\Request;
 
-class TermekController extends Controller
+class TermekController
 {
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
-        $termekek = Termek::paginate(12);
-        return view('termekek.index', compact('termekek'));
+        $termek = Termek::all();
+        return response()->json($termek);
     }
-    
-    public function show(Termek $termek)
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
     {
-        // Növeljük a termék népszerűségét minden megtekintéskor
-        $termek->increment('nepszeruseg');
-        
-        return view('termekek.show', compact('termek'));
+        //
     }
-    
-    public function byKategoria(Kategoria $kategoria)
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreOrderItemRequest $request)
     {
-        $termekek = Termek::where('kategoria_id', $kategoria->id)->paginate(12);
-        return view('termekek.index', compact('termekek', 'kategoria'));
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show(OrderItem $orderItem)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(OrderItem $orderItem)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateOrderItemRequest $request, OrderItem $orderItem)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(OrderItem $orderItem)
+    {
+        //
     }
 }
+

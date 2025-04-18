@@ -3,6 +3,9 @@
     <div class="container">
       <div class="form-box">
         <h2>Bejelentkezés</h2>
+        <div v-if="message" :class="['alert', messageClass]">
+          {{ message }}
+        </div>
         <form @submit.prevent="login">
           <div class="form-group">
             <label for="email">Email</label>
@@ -13,7 +16,9 @@
             <input type="password" v-model="password" id="password" required />
           </div>
           <div class="form-group button-group">
-            <button class="btn" type="submit">Bejelentkezés</button>
+            <button class="btn" type="submit" :disabled="isSubmitting">
+              {{ isSubmitting ? 'Bejelentkezés...' : 'Bejelentkezés' }}
+            </button>
           </div>
         </form>
       </div>
@@ -22,16 +27,55 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      message: '',
+      messageClass: '',
+      isSubmitting: false
     };
   },
   methods: {
-    login() {
-      console.log('Bejelentkezési adatok:', this.email, this.password);
+    async login() {
+      this.isSubmitting = true;
+      this.message = '';
+      
+      try {
+  const response = await axios.post('http://localhost:8000/api/login', {
+    email: this.email,
+    jelszo: this.password  // Changed from password to jelszo to match backend expectation
+  }, {
+    withCredentials: false,  // Added CORS configuration
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  });
+        
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Success message
+        this.message = 'Sikeres bejelentkezés!';
+        this.messageClass = 'alert-success';
+        
+        // Redirect to home or dashboard after successful login
+        setTimeout(() => {
+          this.$router.push('/');
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Login error:', error);
+        this.message = error.response?.data?.message || 'Hibás email vagy jelszó!';
+        this.messageClass = 'alert-danger';
+      } finally {
+        this.isSubmitting = false;
+      }
     }
   }
 };

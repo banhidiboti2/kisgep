@@ -1,14 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\TermekController;
-use App\Http\Controllers\KategoriaController;
-use App\Http\Controllers\KosarController;
-use App\Http\Controllers\RendelesController;
-use App\Http\Controllers\AuthController;
+
+Route::get('/', function () {
+    return view('welcome');
+});
 
 
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
+/*
 // Főoldal
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -17,9 +19,6 @@ Route::get('/termekek', [TermekController::class, 'index'])->name('termekek.inde
 Route::get('/termekek/{termek}', [TermekController::class, 'show'])->name('termekek.show');
 Route::get('/termekek/kategoria/{kategoria}', [TermekController::class, 'byKategoria'])->name('termekek.kategoria');
 
-// Kategóriák
-Route::get('/kategoriak', [KategoriaController::class, 'index'])->name('kategoriak.index');
-Route::get('/kategoriak/{kategoria}', [KategoriaController::class, 'show'])->name('kategoriak.show');
 
 // Regisztráció és bejelentkezés
 Route::get('/regisztracio', [AuthController::class, 'showRegistrationForm'])->name('regisztracio.form');
@@ -48,32 +47,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/rendelesek/{rendeles}', [RendelesController::class, 'show'])->name('rendelesek.show');
 });
 
-// Admin felület route-ok (admin jogosultsághoz kötve)
-Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    
-    // Termékek kezelése
-    Route::resource('termekek', AdminTermekController::class);
-    
-    // Kategóriák kezelése
-    Route::resource('kategoriak', AdminKategoriaController::class);
-    
-    // Rendelések kezelése
-    Route::get('/rendelesek', [AdminRendelesController::class, 'index'])->name('admin.rendelesek.index');
-    Route::get('/rendelesek/{rendeles}', [AdminRendelesController::class, 'show'])->name('admin.rendelesek.show');
-    Route::put('/rendelesek/{rendeles}/statusz', [AdminRendelesController::class, 'updateStatus'])->name('admin.rendelesek.statusz');
-    
-    // Felhasználók kezelése
-    Route::get('/felhasznalok', [AdminUserController::class, 'index'])->name('admin.felhasznalok.index');
-    Route::get('/felhasznalok/{user}', [AdminUserController::class, 'show'])->name('admin.felhasznalok.show');
-    Route::delete('/felhasznalok/{user}', [AdminUserController::class, 'destroy'])->name('admin.felhasznalok.delete');
-});
 
-/*
-|--------------------------------------------------------------------------
-| API Routes (opcionális)
-|--------------------------------------------------------------------------
-*/
+
 
 Route::prefix('api')->group(function () {
     Route::get('/termekek', [ApiController::class, 'termekek']);
@@ -81,3 +56,5 @@ Route::prefix('api')->group(function () {
     Route::get('/termekek/kategoria/{kategoria}', [ApiController::class, 'termekekByKategoria']);
     Route::get('/nepszeru-termekek', [ApiController::class, 'nepszeruTermekek']);
 });
+
+*/

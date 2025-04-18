@@ -64,6 +64,11 @@ const routes = [
     component: PrivacyNoticeView,
 
   },
+  {
+    path: '/confirmation',
+    name: 'OrderConfirmation',
+    component: () => import('../views/OrderConfirmationView.vue')
+  }
 ]
 
 const router = createRouter({

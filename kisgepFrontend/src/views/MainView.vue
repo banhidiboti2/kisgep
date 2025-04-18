@@ -52,55 +52,143 @@
     </div>
 
     <div class="popular-products">
-      <h1>Népszerű Termékek</h1>
-      <div v-for="(item, index) in items" :key="index" class="border border-gray-300 p-4 text-center">
-        <img :src="item.image" alt="Gép" class="product-image mx-auto mb-2">
-        <p class="font-semibold">{{ item.name }}</p>
-        <p>{{ item.description }}</p>
-        <p>Ár: {{ item.price }} Ft</p>
-        <button @click="addToBasket(item)" class="button">Kosárba</button>
+  <h1>Népszerű Termékek</h1>
+  
+  <!-- Loading state -->
+  <div v-if="loading" class="text-center py-4">
+    <p>Termékek betöltése...</p>
+  </div>
+  
+  <!-- Error state -->
+  <div v-else-if="error" class="text-center py-4 text-red-600">
+    <p>{{ error }}</p>
+  </div>
+  
+  <!-- No products found -->
+  <div v-else-if="items.length === 0" class="text-center py-4">
+    <p>Nem található népszerű termék.</p>
+  </div>
+  
+  <!-- Products display -->
+  <div v-else class="grid grid-cols-2 gap-4">
+    <div v-for="(item, index) in items" :key="index" class="border border-gray-300 p-4 text-center rounded shadow-sm hover:shadow-md transition-shadow">
+      <div class="img-wrapper mb-2">
+        <img :src="item.image" alt="Gép" class="product-image mx-auto">
       </div>
+      <p class="font-semibold text-lg">{{ item.name }}</p>
+      <p class="my-2">{{ item.description }}</p>
+      <p class="font-bold my-2">Ár: {{ item.price }} Ft</p>
+      <button @click="addToBasket(item)" class="button hover:bg-gray-400 transition-colors">Kosárba</button>
     </div>
+  </div>
+</div>
   </div>
 
 </template>
 <script>
- import soveny from '@/photos/sovenynyiro.png';
-import sarok from '@/photos/sarokcsiszolo.png';
-
-
 import axios from 'axios';
 
+// Import default images for fallback
+import soveny from '@/photos/sovenynyiro.png';
+import sarok from '@/photos/sarokcsiszolo.png';
+
 export default {
-  name: 'WoodAndMetalView',
+  name: 'MainView',
   data() {
     return {
-      items: [
-        {
-          image: soveny,
-          name: 'Sövénynyíró',
-          description: 'Gyártó: Ryobi',
-          price: 2000
-        },
-        {
-          image: sarok,
-          name: 'Sarokcsiszoló',
-          description: 'Gyártó: Makita',
-          price: 8000
-
-        }
-        ],
-        basket: JSON.parse(localStorage.getItem('basket')) || []
-      };
-    },
-    methods: {
+      items: [],
+      loading: true,
+      error: null,
+      basket: JSON.parse(localStorage.getItem('basket')) || [],
+      defaultImages: {
+        'Sövénynyíró': soveny,
+        'Sarokcsiszoló': sarok
+      }
+    };
+  },
+  methods: {
     addToBasket(item) {
       this.basket.push(item);
       localStorage.setItem('basket', JSON.stringify(this.basket));
     },
+    
+    fetchPopularProducts() {
+  this.loading = true;
+  this.error = null;
+  
+  // Fetch all products first with CORS configuration
+  axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
+    .then(response => {
+      // Check if we got data
+      if (response.data && Array.isArray(response.data)) {
+        // Get products with IDs 17 and 25 if they exist
+        const product17 = response.data.find(item => item.id === 17);
+        const product25 = response.data.find(item => item.id === 25);
+        
+        const popularProducts = [];
+        if (product17) popularProducts.push(product17);
+        if (product25) popularProducts.push(product25);
+        
+        // If we couldn't find the specific products, use the first two as fallback
+        if (popularProducts.length === 0 && response.data.length > 0) {
+          popularProducts.push(response.data[0]);
+          if (response.data.length > 1) {
+            popularProducts.push(response.data[1]);
+          }
+        }
+        
+        // Map the products to our display format
+        this.items = popularProducts.map(item => ({
+          id: item.id,
+          image: this.getProductImage(item),
+          name: item.nev || item.name,
+          description: item.leiras || item.description || `Gyártó: ${item.gyarto || 'Ismeretlen'}`,
+          price: item.ar || item.price
+        }));
+      } else {
+        this.error = 'Nem sikerült betölteni a termékeket';
+        console.error('Unexpected data format:', response.data);
+      }
+      this.loading = false;
+    })
+    .catch(error => {
+      console.error('Error fetching popular products:', error);
+      this.error = 'Hiba történt a termékek betöltése közben. Kérjük, ellenőrizze, hogy a szerver fut-e.';
+      this.loading = false;
+    });
+},
+    
+    getProductImage(item) {
+      // Check if the API provides an image URL
+      if (item.image_url) {
+        return item.image_url;
+      }
+      
+      const name = item.name || item.nev;
+      
+      // Check exact match
+      if (name && this.defaultImages[name]) {
+        return this.defaultImages[name];
+      }
+      
+      // Check partial match (e.g., if name is "Fűnyíró Gép" but key is just "Fűnyíró")
+      for (const key in this.defaultImages) {
+        if (name && name.includes(key)) {
+          return this.defaultImages[key];
+        }
+      }
+      
+      // Return a fallback image
+      return soveny; // First image as default fallback
+    }
+
   },
-  };
-  </script>
+  
+  created() {
+    this.fetchPopularProducts();
+  }
+};
+</script>
 
 
 

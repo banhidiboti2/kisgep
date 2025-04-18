@@ -25,9 +25,7 @@ class Termek extends Model
         'nev',
         'ar',
         'kep',
-        'kategoria_id',
         'keszlet',
-        'nepszeruseg',
     ];
 
     /**
@@ -39,18 +37,11 @@ class Termek extends Model
         'ar' => 'decimal:2',
     ];
 
-    /**
-     * Get the category that owns the product.
-     */
-    public function kategoria()
-    {
-        return $this->belongsTo(Kategoria::class, 'kategoria_id');
-    }
 
     /**
      * Get the orders for the product.
      */
-    public function rendelesek()
+    public function rendeles()
     {
         return $this->belongsToMany(Rendeles::class, 'rendeles_termek')
                     ->withPivot('mennyiseg', 'kezdo_datum', 'vegso_datum', 'ar')

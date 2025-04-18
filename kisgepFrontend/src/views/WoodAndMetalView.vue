@@ -5,16 +5,24 @@
       <router-link to="/" class="back-button">Vissza</router-link>
     </div>
 
-    <div class="grid grid-cols-3 gap-4">
+    <div v-if="loading" class="text-center py-8">
+      <p>Betöltés...</p>
+    </div>
+
+    <div v-else-if="error" class="text-center py-8 text-red-600">
+      <p>{{ error }}</p>
+    </div>
+
+    <div v-else class="grid grid-cols-3 gap-4">
       <div v-for="(item, index) in items" :key="index" class="product-container bg-white rounded shadow hover:shadow-md transition-shadow">
         <div class="product-inner border border-gray-300 p-4 text-center h-full flex flex-col">
           <div class="img-wrapper">
-            <img :src="item.image" alt="Gép" class="product-image">
+            <img :src="getProductImage(item)" alt="Gép" class="product-image">
           </div>
           <div class="product-details">
-            <p class="font-semibold">{{ item.name }}</p>
-            <p>{{ item.description }}</p>
-            <p>Ár: {{ item.price }} Ft</p>
+            <p class="font-semibold">{{ item.name || item.nev }}</p>
+            <p>{{ item.description || item.leiras }}</p>
+            <p>Ár: {{ item.price || item.ar }} Ft</p>
           </div>
           <button @click="addToBasket(item)" class="button mt-auto">Kosárba</button>
         </div>
@@ -23,9 +31,9 @@
   </div>
 </template>
   
-  <script>
- import dekopir from '@/photos/dekopirfuresz.png';
-import asztali from '@/photos/asztali.png';
+<script>
+import dekopir from '@/photos/dekopirfuresz.png';
+import asztalifuresz from '@/photos/asztali.png';
 import gyalu from '@/photos/gyalu.png';
 import marogep from '@/photos/felsomaro.png';
 import szalag from '@/photos/szalag.png';
@@ -40,123 +48,98 @@ import eszterga from '@/photos/eszterga.png';
 import axios from 'axios';
 
 export default {
-  name: 'WoodAndMetalView',
+  name: 'GardenView',
   data() {
-    return {
-      items: [
-        {
-          image: dekopir,
-          name: 'Dekopírfűrész',
-          description: 'Gyártó: Makita',
-          price: 2000
-        },
-        {
-          image: asztali,
-          name: 'Asztali Körfűrész',
-          description: 'Gyártó: Belle',
-          price: 8000
-
-        },
-        {
-          image: gyalu,
-          name: 'Gyalu',
-          description: 'Gyártó: Makita',
-          price: 6000
-
-        },
-        {
-          image: marogep,
-          name: 'Felső Marógép',
-          description: 'Gyártó: Bosch',
-          price: 3000
-
-        },
-        {
-          image: szalag,
-          name: 'Szalagfűrész',
-          description: 'Gyártó: Elektro',
-          price: 5000
-
-        },
-        {
-          image: csiszolo,
-          name: 'Rezgőcsiszoló',
-          description: 'Gyártó: JCB',
-          price: 3000
-
-        },
-        {
-          image: egyenes,
-          name: 'Egyenes Csiszoló',
-          description: 'Gyártó: Bosch',
-          price: 4000
-        },
-        {
-          image: oszlopos,
-          name: 'Oszlopos Fúrógép',
-          description: 'Gyártó: Dake',
-          price: 5000
-        },
-        {
-          image: plazma,
-          name: 'Plazmavágó',
-          description: 'Gyártó: Swift',
-          price: 7000
-        },
-        {
-          image: hegeszto,
-          name: 'Hegesztőgép',
-          description: 'Gyártó: Invertec',
-          price: 12000
-        },
-        {
-          image: lemez,
-          name: 'Lemezvágó',
-          description: 'Gyártó: Extol',
-          price: 1000
-        },
-        {
-          image: eszterga,
-          name: 'Esztergagép',
-          description: 'Gyártó: Hungsam',
-          price: 25000
-        },
-        ],
-        basket: JSON.parse(localStorage.getItem('basket')) || []
-      };
-    },
-    methods: {
-    addToBasket(item) {
-      this.basket.push(item);
-      localStorage.setItem('basket', JSON.stringify(this.basket));
-    },
-    /*
-    fetchProducts() {
-      axios.get('/termekek')
-        .then(response => {
-          this.items = response.data;
-        })
-        .catch(error => {
-          console.error('Error fetching products:', error);
-        });
-    },
-      */
+  return {
+    items: [],
+    basket: JSON.parse(localStorage.getItem('basket')) || [],
+    loading: true,
+    error: null,
+    fetchedData: false, // Add this flag
+    defaultImages: {
+        'Dekopírfűrész': dekopir,
+        'Asztali Körfűrész': asztalifuresz,
+        'Gyalu': gyalu,
+        'Felső Marógép': marogep,
+        'Szalagfűrész': szalag,
+        'Rezgőcsiszoló': csiszolo,
+        'Egyenes Csiszoló': egyenes,
+        'Oszlopos Fúró': oszlopos,
+        'Plazmavágó': plazma,
+        'Hegesztő': hegeszto,
+        'Lemezvágó': lemez,
+        'Eszterga': eszterga
+      }
+    };
   },
-  /*
+  methods: {
+    addToBasket(item) {
+    // Create a copy of the item with consistent property names and add image
+    const basketItem = {
+      id: item.id,
+      name: item.name || item.nev,
+      description: item.description || item.leiras,
+      price: item.price || item.ar,
+      image: item.image_url || this.getProductImage(item)
+    };
+    
+    this.basket.push(basketItem);
+    localStorage.setItem('basket', JSON.stringify(this.basket));
+    
+    // Show confirmation to user
+    alert('Termék hozzáadva a kosárhoz!');
+  },
+
+  fetchProducts() {
+  if (this.fetchedData) return; // Prevent duplicate calls
+  
+  this.loading = true;
+  this.error = null;
+
+  axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
+    .then(response => {
+      console.log('API Response:', response.data);
+      this.items = Array.isArray(response.data) ? response.data : [];
+      this.loading = false;
+      this.fetchedData = true; // Set the flag
+    })
+    .catch(error => {
+      // ...error handling
+    });
+},
+
+    getProductImage(item) {
+      if (item.image_url) {
+        return item.image_url;
+      }
+
+      const name = item.name || item.nev;
+
+      if (name && this.defaultImages[name]) {
+        return this.defaultImages[name];
+      }
+
+      for (const key in this.defaultImages) {
+        if (name && name.includes(key)) {
+          return this.defaultImages[key];
+        }
+      }
+
+      return dekopir; // fallback
+    },
+  },
+
   created() {
     this.fetchProducts();
   }
-  */
-  };
-  </script>
+};
 
-
-
+</script>
   
 <style scoped>
+/* All styles remain the same */
 .product-container {
   transition: transform 0.2s;
-
 }
 
 .product-inner {
