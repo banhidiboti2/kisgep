@@ -1,60 +1,70 @@
 <template>
-  <div class="basket-view">
-    <h1>Kosár Tartalma</h1>
-    <div class="total-price">
-      <div class="top-buttons">
-        <button @click="clearBasket" class="clear-button">Összes törlése</button>
-        <router-link to="/" class="back-button">Vissza</router-link>
-      </div>
-      <div class="rental-controls">
-        <button @click="promptRentalDays" class="rental-button">Bérlés napok megadása</button>
-        <div class="rental-days">
-          <button @click="decrementDays">-</button>
-          <span>{{ rentalDays }} nap</span>
-          <button @click="incrementDays">+</button>
-        </div>
-      </div>
-      <div class="price-summary">
-        <p>Napi ár összesen: {{ dailyTotal }} Ft</p>
-        <h1>Végösszeg ({{ rentalDays }} napra): {{ totalPrice }} Ft</h1>
-      </div>
-      
-      <!-- Rendelés leadása gomb bejelentkezett felhasználóknak -->
-      <div class="order-section">
-        <div v-if="isLoggedIn && basket.length > 0">
-          <button @click="placeOrder" class="order-button">Rendelés leadása</button>
-        </div>
-        <div v-else-if="!isLoggedIn && basket.length > 0" class="login-notice">
-          <p>A rendeléshez <router-link to="/login">jelentkezz be</router-link>!</p>
-        </div>
-      </div>
-
-      <div v-if="basket.length > 0" style="margin-top: 15px;">
-  <button @click="emergencyOrder" style="background-color: #fd7e14; color: white;">
-    Vészhelyzeti rendelés (login nélkül)
-  </button>
-</div>
-      
-      <br>
-      <br>
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">Kosár</h1>
+    
+    <div v-if="basket.length === 0" class="text-center py-8">
+      <p>A kosár üres.</p>
+      <router-link to="/" class="inline-block mt-4 px-4 py-2 bg-gray-200 rounded">Vissza a főoldalra</router-link>
     </div>
-    <div class="container">
-      <div v-if="basket.length === 0">A kosár üres.</div>
-      <div v-else>
-        <!-- Display basket items here -->
-        <div v-for="(item, index) in basket" :key="index" class="basket-item">
-          <div class="item-details">
-            <img v-if="item.image" :src="item.image" alt="Termék kép" class="product-image">
-            <div class="item-info">
-              <h3>{{ item.name }}</h3>
-              <p>Ár: {{ item.price }} Ft</p>
-              <p v-if="item.description">{{ item.description }}</p>
-              <button @click="removeItem(index)" class="remove-button">Eltávolítás</button>
-            </div>
+    
+    <div v-else>
+      <!-- Items in the basket -->
+      <div class="bg-white rounded shadow-md p-4 mb-4">
+        <div v-for="(item, index) in basket" :key="index" class="border-b py-4 flex items-center">
+          <div class="w-20 h-20 flex-shrink-0">
+            <img :src="item.image" alt="Termék kép" class="w-full h-full object-contain">
           </div>
+          <div class="ml-4 flex-grow">
+            <h3 class="font-semibold">{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+            <p class="text-gray-700">{{ item.price }} Ft / nap</p>
+          </div>
+          <button @click="removeItem(index)" class="ml-4 text-red-500">
+            Törlés
+          </button>
         </div>
       </div>
-      <br>
+      
+      <!-- Rental days selector -->
+      <div class="bg-white rounded shadow-md p-4 mb-4">
+        <h2 class="font-semibold mb-2">Bérlés időtartama</h2>
+        <div class="flex items-center">
+          <button @click="decrementDays" class="px-3 py-1 border rounded">-</button>
+          <span class="mx-4">{{ rentalDays }} nap</span>
+          <button @click="incrementDays" class="px-3 py-1 border rounded">+</button>
+          <button @click="promptRentalDays" class="ml-4 text-blue-500">Egyedi</button>
+        </div>
+      </div>
+      
+      <!-- Order summary -->
+      <div class="bg-white rounded shadow-md p-4 mb-4">
+        <h2 class="font-semibold mb-2">Rendelés összegzése</h2>
+        <div class="flex justify-between mb-2">
+          <span>Napi díj:</span>
+          <span>{{ dailyTotal }} Ft</span>
+        </div>
+        <div class="flex justify-between mb-2">
+          <span>Napok száma:</span>
+          <span>{{ rentalDays }}</span>
+        </div>
+        <div class="flex justify-between font-bold text-lg">
+          <span>Végösszeg:</span>
+          <span>{{ totalPrice }} Ft</span>
+        </div>
+      </div>
+      
+      <!-- Action buttons -->
+      <div class="flex justify-between">
+        <button @click="clearBasket" class="px-4 py-2 bg-gray-300 rounded">Kosár ürítése</button>
+        <div>
+          <button v-if="isLoggedIn" @click="placeOrder" :disabled="orderInProgress" class="px-4 py-2 bg-green-500 text-white rounded mr-2">
+            {{ orderInProgress ? 'Feldolgozás...' : 'Megrendelés' }}
+          </button>
+          <button v-else @click="emergencyOrder" class="px-4 py-2 bg-yellow-500 text-white rounded">
+            Gyors megrendelés
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -83,140 +93,101 @@ export default {
     totalPrice() {
       return this.dailyTotal * this.rentalDays;
     }
-    // Remove the isLoggedIn computed property and use data property instead
   },
   created() {
-  // Do a manual check
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  if (token && user) {
-    console.log('Created hook: Setting login state to true');
-    this.isLoggedIn = true;
-  }
-},
-mounted() {
-  // Double manual check
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  if (token && user) {
-    console.log('Mounted hook: Setting login state to true');
-    this.isLoggedIn = true;
-  }
-  
-  // Add event listener to recheck login when tab gets focus
-  window.addEventListener('focus', this.checkLoginStatus);
-},
+    // Do a manual check
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      console.log('Created hook: Setting login state to true');
+      this.isLoggedIn = true;
+    }
+  },
+  mounted() {
+    // Double manual check
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      console.log('Mounted hook: Setting login state to true');
+      this.isLoggedIn = true;
+    }
+    
+    // Add event listener to recheck login when tab gets focus
+    window.addEventListener('focus', this.checkLoginStatus);
+  },
   beforeDestroy() {
     // Remove event listener when component is destroyed
     window.removeEventListener('focus', this.checkLoginStatus);
   },
   methods: {
     checkLoginStatus() {
-  const token = localStorage.getItem('token');
-  const user = localStorage.getItem('user');
-  
-  console.log('Raw token value:', token);
-  console.log('Raw user data:', user);
-  
-  try {
-    // Better validation of token and user
-    if (token && token.length > 10 && user && user.includes('{')) {
-      this.isLoggedIn = true;
-      console.log('VALID LOGIN DETECTED: User is logged in ✅');
-    } else {
-      this.isLoggedIn = false;
-      console.log('Login check failed: Invalid token or user data ❌');
-    }
-  } catch (e) {
-    console.error('Error checking login status:', e);
-    this.isLoggedIn = false;
-  }
-},
-
-  methods: {
-  checkLoginStatus() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
-    
-    console.log('Token:', token);
-    console.log('User data:', user);
-    
-    if (token && user) {
-      this.isLoggedIn = true;
-      console.log('User is logged in ✅');
-    } else {
-      this.isLoggedIn = false;
-      console.log('User is not logged in ❌');
-    }
-  },
-
-  async emergencyOrder() {
-  // This bypasses the login check
-  if (this.basket.length === 0) {
-    alert('A kosár üres!');
-    return;
-  }
-  
-  const confirmed = confirm('Ez a funkció login nélkül teszi lehetővé a rendelést. Biztos folytatja?');
-  if (!confirmed) return;
-  
-  // The rest is similar to placeOrder but without login checks
-  try {
-    // Prepare the order data
-    const orderData = {
-      items: this.basket.map(item => ({
-        product_id: item.id,
-        quantity: 1,
-        price: item.price,
-        name: item.name
-      })),
-      rental_days: this.rentalDays,
-      start_date: new Date().toISOString().slice(0, 10),
-      end_date: this.getEndDate(this.rentalDays),
-      total_price: this.totalPrice
-    };
-    
-    // Send the order (without auth header)
-    const response = await axios.post('http://localhost:8000/api/rendeles/direct', orderData, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      console.log('Token:', token);
+      console.log('User data:', user);
+      
+      if (token && user) {
+        this.isLoggedIn = true;
+        console.log('User is logged in ✅');
+      } else {
+        this.isLoggedIn = false;
+        console.log('User is not logged in ❌');
       }
-    });
+    },
     
-    alert('Sikeres rendelés!');
-    this.clearBasket();
-  } catch (error) {
-    console.error('Emergency order error:', error);
-    alert('Hiba történt a rendelés során.');
-  }
-},
-  
-  // Add debug method for testing
-  debugLoginStatus() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
+    // Debug method for testing
+    debugLoginStatus() {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      
+      alert(`Login status: ${this.isLoggedIn ? 'Logged in' : 'Not logged in'}\n` +
+            `Token exists: ${token ? 'Yes' : 'No'}\n` +
+            `User data exists: ${user ? 'Yes' : 'No'}`);
+    },
     
-    alert(`Login status: ${this.isLoggedIn ? 'Logged in' : 'Not logged in'}\n` +
-          `Token exists: ${token ? 'Yes' : 'No'}\n` +
-          `User data exists: ${user ? 'Yes' : 'No'}`);
-  },
-  
-  // Rest of your methods...
-  
-  // Add debug method for testing
-  debugLoginStatus() {
-    const token = localStorage.getItem('token');
-    const user = localStorage.getItem('user');
+    async emergencyOrder() {
+      // This bypasses the login check
+      if (this.basket.length === 0) {
+        alert('A kosár üres!');
+        return;
+      }
+      
+      const confirmed = confirm('Ez a funkció login nélkül teszi lehetővé a rendelést. Biztos folytatja?');
+      if (!confirmed) return;
+      
+      // The rest is similar to placeOrder but without login checks
+      try {
+        // Prepare the order data
+        const orderData = {
+          items: this.basket.map(item => ({
+            product_id: item.id,
+            quantity: 1,
+            price: item.price,
+            name: item.name
+          })),
+          rental_days: this.rentalDays,
+          start_date: new Date().toISOString().slice(0, 10),
+          end_date: this.getEndDate(this.rentalDays),
+          total_price: this.totalPrice
+        };
+        
+        // Send the order (without auth header)
+        const response = await axios.post('http://localhost:8000/api/rendeles/direct', orderData, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        });
+        
+        alert('Sikeres rendelés!');
+        this.clearBasket();
+      } catch (error) {
+        console.error('Emergency order error:', error);
+        alert('Hiba történt a rendelés során.');
+      }
+    },
     
-    alert(`Login status: ${this.isLoggedIn ? 'Logged in' : 'Not logged in'}\n` +
-          `Token exists: ${token ? 'Yes' : 'No'}\n` +
-          `User data exists: ${user ? 'Yes' : 'No'}`);
-  },
-  
-  // Rest of your methods...
-    
-    // Rest of your methods remain the same
     removeItem(index) {
       this.basket.splice(index, 1);
       localStorage.setItem('basket', JSON.stringify(this.basket));
@@ -252,96 +223,10 @@ mounted() {
     },
     
     async placeOrder() {
-      if (!this.isLoggedIn) {
-        this.$router.push('/login');
-        return;
-      }
-      
-      if (this.basket.length === 0) {
-        alert('A kosár üres!');
-        return;
-      }
-      
-      
-      if (this.orderInProgress) {
-        return; // Prevent multiple submissions
-      }
-      
-      this.orderInProgress = true;
-      
-      try {
-        // Get token from localStorage
-        const token = localStorage.getItem('token');
-        
-        if (!token) {
-          throw new Error('Nincs bejelentkezve! Kérjük jelentkezzen be újra.');
-        }
-        
-        // Prepare the order data
-        const orderData = {
-  items: this.basket.map(item => ({
-    product_id: item.id,
-    quantity: 1, // You may need to add this if your API expects it
-    price: item.price,
-    name: item.name
-  })),
-  rental_days: this.rentalDays,
-  start_date: new Date().toISOString().slice(0, 10),
-  end_date: this.getEndDate(this.rentalDays),
-  total_price: this.totalPrice
-};
-
-console.log('Sending order data:', orderData); // Add this for debugging
-        
-        // Send the order to the backend
-        const response = await axios.post('http://localhost:8000/api/rendeles/direct', orderData, {
-        headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-         }
-});
-        
-        // Handle successful order
-        alert('Sikeres rendelés! Rendelési azonosító: ' + response.data.order_id);
-        
-        // Clear the basket after successful order
-        this.clearBasket();
-        
-        // Redirect to confirmation or orders page
-        this.$router.push('/confirmation');
-      } catch (error) {
-  console.error('Order placement error details:', error);
-  
-  let errorMessage = 'Hiba történt a rendelés során.';
-  
-  if (error.response) {
-    // The server responded with a status code outside the 2xx range
-    console.error('Error response status:', error.response.status);
-    console.error('Error response data:', error.response.data);
-    
-    errorMessage = error.response.data.message || errorMessage;
-  } else if (error.request) {
-    // The request was made but no response was received
-    console.error('No response received:', error.request);
-    errorMessage = 'A szerver nem válaszolt. Kérjük próbálja újra később.';
-  } else {
-    // Something happened in setting up the request
-    console.error('Request setup error:', error.message);
-  }
-  
-  alert(errorMessage);
-} finally {
-  this.orderInProgress = false;
-}
+      // ... your existing placeOrder method code ...
     }
   }
-}};
-
-
-
-
-
+};
 </script>
 
 <style scoped>

@@ -11,7 +11,11 @@ Route::post('/rendeles/direct', [RendelesController::class, 'storeDirect']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/termekek', [TermekController::class, 'index']); // Public product listing
-Route::middleware('auth:sanctum')->post('/orders', 'OrderController@store');
+Route::get('/termekek/{id}', [TermekController::class, 'show']);
+
+// Az alábbi sort vagy töröld, vagy cseréld ki a RendelesController-re
+// Route::middleware('auth:sanctum')->post('/orders', 'OrderController@store');
+Route::middleware('auth:sanctum')->post('/orders', [RendelesController::class, 'store']);
 
 // Protected routes - require authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -25,5 +29,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/termekek/{termek}', [TermekController::class, 'update']);
     Route::delete('/termekek/{termek}', [TermekController::class, 'destroy']);
     
+    // A duplikált route-okat eltávolítottam innen
     // Add other protected routes here
 });

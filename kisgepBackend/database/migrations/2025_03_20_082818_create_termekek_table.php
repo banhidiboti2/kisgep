@@ -7,16 +7,17 @@ return new class extends Migration
 {
    public function up()
    {
-       Schema::create('termekek', function (Blueprint $table) {
-           $table->id();
-           $table->string('nev');
-           $table->string('leiras');
-           $table->decimal('ar', 10, 2); // napi díj
-           $table->string('kep');
-           $table->integer('keszlet')->default(1); // rendelkezésre álló darabszám
-           $table->timestamps();
-           $table->softDeletes();
-       });
+    DB::statement('CREATE TABLE termekek (
+        id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        nev VARCHAR(255) NOT NULL,
+        leiras VARCHAR(255) NOT NULL,
+        ar DECIMAL(10, 2) NOT NULL,
+        kep LONGBLOB,
+        keszlet INT DEFAULT 1,
+        created_at TIMESTAMP NULL,
+        updated_at TIMESTAMP NULL,
+        deleted_at TIMESTAMP NULL
+    )');
    }
    public function down()
    {

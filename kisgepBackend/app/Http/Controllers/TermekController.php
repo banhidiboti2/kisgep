@@ -12,8 +12,21 @@ class TermekController
      */
     public function index()
     {
-        $termek = Termek::all();
-        return response()->json($termek);
+        $termekek = Termek::all()->map(function($termek) {
+            // Kép base64 formátumba alakítása
+            $kepBase64 = base64_encode($termek->kep);
+            
+            return [
+                'id' => $termek->id,
+                'nev' => $termek->nev,
+                'leiras' => $termek->leiras,
+                'ar' => $termek->ar,
+                'keszlet' => $termek->keszlet,
+                'image_url' => 'data:image/jpeg;base64,' . $kepBase64
+            ];
+        });
+        
+        return response()->json($termekek);
     }
 
     /**
@@ -35,11 +48,20 @@ class TermekController
     /**
      * Display the specified resource.
      */
-    public function show(OrderItem $orderItem)
+    public function show($id)
     {
-        //
+        $termek = Termek::findOrFail($id);
+        $kepBase64 = base64_encode($termek->kep);
+        
+        return response()->json([
+            'id' => $termek->id,
+            'nev' => $termek->nev,
+            'leiras' => $termek->leiras,
+            'ar' => $termek->ar,
+            'keszlet' => $termek->keszlet,
+            'image_url' => 'data:image/jpeg;base64,' . $kepBase64
+        ]);
     }
-
     /**
      * Show the form for editing the specified resource.
      */

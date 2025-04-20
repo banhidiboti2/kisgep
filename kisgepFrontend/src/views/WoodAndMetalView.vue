@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Kerti Gépek</h1>
+      <h1 class="text-2xl font-bold">Fa és Fémipari Gépek</h1>
       <router-link to="/" class="back-button">Vissza</router-link>
     </div>
 
@@ -14,7 +14,7 @@
     </div>
 
     <div v-else class="grid grid-cols-3 gap-4">
-      <div v-for="(item, index) in items" :key="index" class="product-container bg-white rounded shadow hover:shadow-md transition-shadow">
+      <div v-for="(item, index) in limitedItems" :key="index" class="product-container bg-white rounded shadow hover:shadow-md transition-shadow">
         <div class="product-inner border border-gray-300 p-4 text-center h-full flex flex-col">
           <div class="img-wrapper">
             <img :src="getProductImage(item)" alt="Gép" class="product-image">
@@ -32,100 +32,87 @@
 </template>
   
 <script>
-import dekopir from '@/photos/dekopirfuresz.png';
-import asztalifuresz from '@/photos/asztali.png';
-import gyalu from '@/photos/gyalu.png';
-import marogep from '@/photos/felsomaro.png';
-import szalag from '@/photos/szalag.png';
-import csiszolo from '@/photos/rezgocsiszolo.png';
-import egyenes from '@/photos/egyenescsiszolo.png';
-import oszlopos from '@/photos/oszlopos.png';
-import plazma from '@/photos/plazmavago.png';
-import hegeszto from '@/photos/hegeszto.png';
-import lemez from '@/photos/lemezvago.png';
-import eszterga from '@/photos/eszterga.png';
-
 import axios from 'axios';
 
 export default {
   name: 'GardenView',
   data() {
-  return {
-    items: [],
-    basket: JSON.parse(localStorage.getItem('basket')) || [],
-    loading: true,
-    error: null,
-    fetchedData: false, // Add this flag
-    defaultImages: {
-        'Dekopírfűrész': dekopir,
-        'Asztali Körfűrész': asztalifuresz,
-        'Gyalu': gyalu,
-        'Felső Marógép': marogep,
-        'Szalagfűrész': szalag,
-        'Rezgőcsiszoló': csiszolo,
-        'Egyenes Csiszoló': egyenes,
-        'Oszlopos Fúró': oszlopos,
-        'Plazmavágó': plazma,
-        'Hegesztő': hegeszto,
-        'Lemezvágó': lemez,
-        'Eszterga': eszterga
-      }
+    return {
+      items: [],
+      basket: JSON.parse(localStorage.getItem('basket')) || [],
+      loading: true,
+      error: null,
+      fetchedData: false
     };
+  },
+  computed: {
+    // Csak az első 12 termék megjelenítése
+    limitedItems() {
+      return this.items.slice(0, 12);
+    }
   },
   methods: {
     addToBasket(item) {
-    // Create a copy of the item with consistent property names and add image
-    const basketItem = {
-      id: item.id,
-      name: item.name || item.nev,
-      description: item.description || item.leiras,
-      price: item.price || item.ar,
-      image: item.image_url || this.getProductImage(item)
-    };
-    
-    this.basket.push(basketItem);
-    localStorage.setItem('basket', JSON.stringify(this.basket));
-    
-    // Show confirmation to user
-    alert('Termék hozzáadva a kosárhoz!');
-  },
+      // Create a copy of the item with consistent property names and add image
+      const basketItem = {
+        id: item.id,
+        name: item.name || item.nev,
+        description: item.description || item.leiras,
+        price: item.price || item.ar,
+        image: this.getProductImage(item)
+      };
+      
+      this.basket.push(basketItem);
+      localStorage.setItem('basket', JSON.stringify(this.basket));
+      
+      // Show confirmation to user
+      alert('Termék hozzáadva a kosárhoz!');
+    },
 
-  fetchProducts() {
-  if (this.fetchedData) return; // Prevent duplicate calls
-  
-  this.loading = true;
-  this.error = null;
+    fetchProducts() {
+      if (this.fetchedData) return; // Prevent duplicate calls
+      
+      this.loading = true;
+      this.error = null;
 
-  axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
-    .then(response => {
-      console.log('API Response:', response.data);
-      this.items = Array.isArray(response.data) ? response.data : [];
-      this.loading = false;
-      this.fetchedData = true; // Set the flag
-    })
-    .catch(error => {
-      // ...error handling
-    });
-},
+      axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
+        .then(response => {
+          console.log('API Response:', response.data);
+          this.items = Array.isArray(response.data) ? response.data : [];
+          this.loading = false;
+          this.fetchedData = true;
+        })
+        .catch(error => {
+          console.error('API Error:', error);
+          this.error = 'Az adatok betöltése sikertelen. Kérjük próbálja újra később.';
+          this.loading = false;
+        });
+    },
 
     getProductImage(item) {
+      // Ha a kép base64 formátumban van
+      if (item.kep && typeof item.kep === 'string') {
+        // Ellenőrizzük, hogy a kép már tartalmaz-e data URI sémát
+        if (item.kep.startsWith('data:image')) {
+          return item.kep;
+        } else {
+          // Ha nyers base64 adat, hozzáadjuk a data URI sémát
+          return `data:image/png;base64,${item.kep}`;
+        }
+      }
+      
+      // Ha van image_url, használjuk azt
       if (item.image_url) {
         return item.image_url;
       }
-
-      const name = item.name || item.nev;
-
-      if (name && this.defaultImages[name]) {
-        return this.defaultImages[name];
+      
+      // Alternatív megoldás: képet lekérni a termék ID alapján
+      if (item.id) {
+        return `http://127.0.0.1:8000/api/termekek/${item.id}/kep`;
       }
-
-      for (const key in this.defaultImages) {
-        if (name && name.includes(key)) {
-          return this.defaultImages[key];
-        }
-      }
-
-      return dekopir; // fallback
+      
+      // Ha egyik sem működik, használunk egy alapértelmezett placeholder képet
+      return 'https://via.placeholder.com/200x200?text=Nincs+kép';
     },
   },
 
@@ -133,11 +120,10 @@ export default {
     this.fetchProducts();
   }
 };
-
 </script>
   
 <style scoped>
-/* All styles remain the same */
+/* Minden stílus változatlan marad */
 .product-container {
   transition: transform 0.2s;
 }

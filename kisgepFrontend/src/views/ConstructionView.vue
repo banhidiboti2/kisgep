@@ -17,7 +17,7 @@
       <div v-for="(item, index) in items" :key="index" class="product-container bg-white rounded shadow hover:shadow-md transition-shadow">
         <div class="product-inner border border-gray-300 p-4 text-center h-full flex flex-col">
           <div class="img-wrapper">
-            <img :src="item.image_url || getDefaultImage(item.name || item.nev)" alt="Gép" class="product-image">
+            <img :src="getProductImage(item)" alt="Gép" class="product-image">
           </div>
           <div class="product-details">
             <p class="font-semibold">{{ item.name || item.nev }}</p>
@@ -32,19 +32,6 @@
 </template>
   
 <script>
-import sarokcsiszolo from '@/photos/sarokcsiszolo.png';
-import furogep from '@/photos/furogep.png';
-import vesogep from '@/photos/vesogep.png';
-import betonkevero from '@/photos/betonkevero.png';
-import lezeres from '@/photos/lezeres.png';
-import holegfuvo from '@/photos/holegfuvo.png';
-import magasnyomasu from '@/photos/magasnyomasu.png';
-import koszoru from '@/photos/koszoru.png';
-import korfuresz from '@/photos/korfuresz.png';
-import kompresszor from '@/photos/kompresszor.png';
-import gervago from '@/photos/gervago.png';
-import aszfaltvago from '@/photos/aszfaltvago.png';
-
 import axios from 'axios';
 
 export default {
@@ -54,70 +41,77 @@ export default {
       items: [],
       basket: JSON.parse(localStorage.getItem('basket')) || [],
       loading: true,
-      error: null,
-      defaultImages: {
-        'Sarokcsiszoló': sarokcsiszolo,
-        'Fúrógép': furogep,
-        'Vésőgép': vesogep,
-        'Betonkeverő': betonkevero,
-        'Lézeres Szintező': lezeres,
-        'Hőlégfúvó': holegfuvo,
-        'Magasnyomású Mosó': magasnyomasu,
-        'Köszörű': koszoru,
-        'Körfűrész': korfuresz,
-        'Kompresszor': kompresszor,
-        'Gérvágó': gervago,
-        'Aszfaltvágó': aszfaltvago
-      }
+      error: null
     };
   },
   methods: {
     addToBasket(item) {
-    // Create a copy of the item with consistent property names and add image
-    const basketItem = {
-      id: item.id,
-      name: item.name || item.nev,
-      description: item.description || item.leiras,
-      price: item.price || item.ar,
-      image: item.image_url || this.getDefaultImage(item.name || item.nev)
-    };
+      // Create a copy of the item with consistent property names and add image
+      const basketItem = {
+        id: item.id,
+        name: item.name || item.nev,
+        description: item.description || item.leiras,
+        price: item.price || item.ar,
+        image: this.getProductImage(item)
+      };
+      
+      this.basket.push(basketItem);
+      localStorage.setItem('basket', JSON.stringify(this.basket));
+      
+      // Show confirmation to user
+      alert('Termék hozzáadva a kosárhoz!');
+    },
     
-    this.basket.push(basketItem);
-    localStorage.setItem('basket', JSON.stringify(this.basket));
+    fetchProducts() {
+      this.loading = true;
+      this.error = null;
+      
+      axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
+        .then(response => {
+          console.log('API Response:', response.data);
+          // Check if data is an array and maintain the specific slice for construction products (24-36)
+          if (Array.isArray(response.data)) {
+            this.items = response.data.slice(24, 36);
+          } else if (response.data.data && Array.isArray(response.data.data)) {
+            // Handle wrapped data format if needed
+            this.items = response.data.data.slice(24, 36);
+          } else {
+            console.error('Unexpected data format:', response.data);
+            this.error = 'Váratlan adatformátum az API válaszában';
+          }
+          this.loading = false;
+        })
+        .catch(error => {
+          console.error('Error fetching products:', error);
+          this.error = 'Hiba történt a termékek betöltése közben. Kérjük, próbálja újra később.';
+          this.loading = false;
+        });
+    },
     
-    // Show confirmation to user
-    alert('Termék hozzáadva a kosárhoz!');
-  },
-    
-  fetchProducts() {
-  this.loading = true;
-  this.error = null;
-  
-  axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
-    .then(response => {
-      console.log('API Response:', response.data);
-      // Check if data is an array and maintain the specific slice for construction products (24-36)
-      if (Array.isArray(response.data)) {
-        this.items = response.data.slice(24, 36);
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        // Handle wrapped data format if needed
-        this.items = response.data.data.slice(24, 36);
-      } else {
-        console.error('Unexpected data format:', response.data);
-        this.error = 'Váratlan adatformátum az API válaszában';
+    getProductImage(item) {
+      // Ha a kép base64 formátumban van
+      if (item.kep && typeof item.kep === 'string') {
+        // Ellenőrizzük, hogy a kép már tartalmaz-e data URI sémát
+        if (item.kep.startsWith('data:image')) {
+          return item.kep;
+        } else {
+          // Ha nyers base64 adat, hozzáadjuk a data URI sémát
+          return `data:image/png;base64,${item.kep}`;
+        }
       }
-      this.loading = false;
-    })
-    .catch(error => {
-      console.error('Error fetching products:', error);
-      this.error = 'Hiba történt a termékek betöltése közben. Kérjük, próbálja újra később.';
-      this.loading = false;
-    });
-},
-    
-    getDefaultImage(name) {
-      // Return default image based on product name or a generic default
-      return this.defaultImages[name] || this.defaultImages['Sarokcsiszoló'];
+      
+      // Ha van image_url, használjuk azt
+      if (item.image_url) {
+        return item.image_url;
+      }
+      
+      // Alternatív megoldás: képet lekérni a termék ID alapján
+      if (item.id) {
+        return `http://127.0.0.1:8000/api/termekek/${item.id}/kep`;
+      }
+      
+      // Ha egyik sem működik, használunk egy alapértelmezett placeholder képet
+      return 'https://via.placeholder.com/200x200?text=Nincs+kép';
     }
   },
   
@@ -128,6 +122,7 @@ export default {
 </script>
   
 <style scoped>
+/* A stílusok változatlanok maradnak */
 .product-container {
   transition: transform 0.2s;
 }

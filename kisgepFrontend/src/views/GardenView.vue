@@ -32,19 +32,6 @@
 </template>
   
 <script>
-import fuyniro from '@/photos/funyiro.png';
-import fukasza from '@/photos/fukasza.png';
-import lombfuvo from '@/photos/lombfuvo.png';
-import ronkhasito from '@/photos/ronkhasito.png';
-import sovenynyiro from '@/photos/sovenynyiro.png';
-import agaprito from '@/photos/agaprito.png';
-import permetezo from '@/photos/permetezo.png';
-import talajfuro from '@/photos/talajfuro.png';
-import szivattyu from '@/photos/szivattyu.png';
-import gyepszellozteto from '@/photos/gyep.png';
-import magassagi from '@/photos/magassagi.png';
-import tuskomaro from '@/photos/tuskomaro.png';
-
 import axios from 'axios';
 
 export default {
@@ -54,89 +41,77 @@ export default {
       items: [],
       basket: JSON.parse(localStorage.getItem('basket')) || [],
       loading: true,
-      error: null,
-      defaultImages: {
-        'Fűnyíró': fuyniro,
-        'Fűkasza': fukasza,
-        'Lombfúvó': lombfuvo,
-        'Rönkhasító': ronkhasito,
-        'Sövénynyíró': sovenynyiro,
-        'Ágaprító': agaprito,
-        'Permetező': permetezo,
-        'Talajfúró': talajfuro,
-        'Szivattyú': szivattyu,
-        'Gyepszellőztető': gyepszellozteto,
-        'Magassági Ágvágó': magassagi,
-        'Tuskómaró': tuskomaro
-      }
+      error: null
     };
   },
   methods: {
     addToBasket(item) {
-    // Create a copy of the item with consistent property names and add image
-    const basketItem = {
-      id: item.id,
-      name: item.name || item.nev,
-      description: item.description || item.leiras,
-      price: item.price || item.ar,
-      image: item.image_url || this.getProductImage(item)
-    };
+      // Create a copy of the item with consistent property names and add image
+      const basketItem = {
+        id: item.id,
+        name: item.name || item.nev,
+        description: item.description || item.leiras,
+        price: item.price || item.ar,
+        image: this.getProductImage(item)
+      };
+      
+      this.basket.push(basketItem);
+      localStorage.setItem('basket', JSON.stringify(this.basket));
+      
+      // Show confirmation to user
+      alert('Termék hozzáadva a kosárhoz!');
+    },
     
-    this.basket.push(basketItem);
-    localStorage.setItem('basket', JSON.stringify(this.basket));
-    
-    // Show confirmation to user
-    alert('Termék hozzáadva a kosárhoz!');
-  },
-    
-  fetchProducts() {
-  this.loading = true;
-  this.error = null;
+    fetchProducts() {
+      this.loading = true;
+      this.error = null;
 
-  axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
-    .then(response => {
-      console.log('API Response:', response.data);
-      // Check if data is an array and maintain the specific slice for garden products (12-24)
-      if (Array.isArray(response.data)) {
-        this.items = response.data.slice(12, 24);
-      } else if (response.data.data && Array.isArray(response.data.data)) {
-        // Handle wrapped data format if needed
-        this.items = response.data.data.slice(12, 24);
-      } else {
-        console.error('Unexpected data format:', response.data);
-        this.error = 'Váratlan adatformátum az API válaszában';
-      }
-      this.loading = false;
-    })
-    .catch(error => {
-      console.error('Error fetching products:', error);
-      this.error = 'Hiba történt a termékek betöltése közben.';
-      this.loading = false;
-    });
-},
+      axios.get('http://127.0.0.1:8000/api/termekek', { withCredentials: false })
+        .then(response => {
+          console.log('API Response:', response.data);
+          // Check if data is an array and maintain the specific slice for garden products (12-24)
+          if (Array.isArray(response.data)) {
+            this.items = response.data.slice(12, 24);
+          } else if (response.data.data && Array.isArray(response.data.data)) {
+            // Handle wrapped data format if needed
+            this.items = response.data.data.slice(12, 24);
+          } else {
+            console.error('Unexpected data format:', response.data);
+            this.error = 'Váratlan adatformátum az API válaszában';
+          }
+          this.loading = false;
+        })
+        .catch(error => {
+          console.error('Error fetching products:', error);
+          this.error = 'Hiba történt a termékek betöltése közben.';
+          this.loading = false;
+        });
+    },
     
     getProductImage(item) {
-      // First check if the API provides an image URL
+      // Ha a kép base64 formátumban van
+      if (item.kep && typeof item.kep === 'string') {
+        // Ellenőrizzük, hogy a kép már tartalmaz-e data URI sémát
+        if (item.kep.startsWith('data:image')) {
+          return item.kep;
+        } else {
+          // Ha nyers base64 adat, hozzáadjuk a data URI sémát
+          return `data:image/png;base64,${item.kep}`;
+        }
+      }
+      
+      // Ha van image_url, használjuk azt
       if (item.image_url) {
         return item.image_url;
       }
       
-      const name = item.name || item.nev;
-      
-      // Check exact match
-      if (name && this.defaultImages[name]) {
-        return this.defaultImages[name];
+      // Alternatív megoldás: képet lekérni a termék ID alapján
+      if (item.id) {
+        return `http://127.0.0.1:8000/api/termekek/${item.id}/kep`;
       }
       
-      // Check partial match (e.g., if name is "Fűnyíró Gép" but key is just "Fűnyíró")
-      for (const key in this.defaultImages) {
-        if (name && name.includes(key)) {
-          return this.defaultImages[key];
-        }
-      }
-      
-      // Return a fallback image
-      return fuyniro; // First image as default fallback
+      // Ha egyik sem működik, használunk egy alapértelmezett placeholder képet
+      return 'https://via.placeholder.com/200x200?text=Nincs+kép';
     },
   },
   
