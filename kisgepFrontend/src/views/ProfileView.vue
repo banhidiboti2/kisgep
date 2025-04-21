@@ -82,7 +82,6 @@
         this.isLoggedIn = false;
         this.user = null;
         
-        // Redirect to home page
         this.$router.push('/');
       }
     }
@@ -90,100 +89,95 @@
   </script>
   
   <style scoped>
-  .profile-view {
-    background-color: rgb(209, 219, 225);
-    min-height: 100vh;
-    padding: 20px;
-  }
-  
-  .container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-  
-  .profile-box, .login-prompt {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 40px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 600px;
-    transition: all 0.3s ease;
-  }
-  
-  h1, h2 {
-    margin-bottom: 30px;
-    text-align: center;
-    color: #333;
-    font-weight: 300;
-  }
-  
-  .profile-info {
-    display: flex;
-    margin-bottom: 30px;
-  }
-  
-  .profile-avatar {
-    margin-right: 30px;
-    display: flex;
-    align-items: center;
-  }
-  
-  .avatar-circle {
-    width: 80px;
-    height: 80px;
-    background-color: #f1c40f;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .initials {
-    font-size: 30px;
-    color: white;
-    font-weight: bold;
-  }
-  
-  .profile-details {
-    flex: 1;
-  }
-  
-  .profile-field {
-    margin-bottom: 20px;
-  }
-  
-  .profile-field h3 {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 5px;
-  }
-  
-  .profile-field p {
-    font-size: 16px;
-    color: #333;
-  }
-  
-  .btn-logout, .btn-login {
-    background: #f1c40f;
-    color: #fff;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 50px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background 0.3s ease, transform 0.3s ease;
-    display: block;
-    width: fit-content;
-    margin: 0 auto;
-    text-decoration: none;
-    text-align: center;
-  }
-  
-  .btn-logout:hover, .btn-login:hover {
-    background: #d4ac0d;
-    transform: translateY(-2px);
-  }
-  </style>
+.profile-view {
+  background-color: rgb(209, 219, 225);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.profile-box, .login-prompt {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  transition: all 0.3s ease;
+}
+
+h1, h2 {
+  margin-bottom: 30px;
+  text-align: center;
+  color: #333;
+  font-weight: 300;
+}
+
+.profile-info {
+  display: flex;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  margin-right: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.avatar-circle {
+  width: 80px;
+  height: 80px;
+  background-color: #858a91;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.initials {
+  font-size: 30px;
+  color: white;
+  font-weight: bold;
+}
+
+.profile-details {
+  flex: 1;
+}
+
+.profile-field {
+  margin-bottom: 20px;
+}
+
+.profile-field h3 {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.profile-field p {
+  font-size: 16px;
+  color: #333;
+}
+
+.btn-logout, .btn-login {
+  background-color: #858a91;
+  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  display: block;
+  width: fit-content;
+  margin: 0 auto;
+  text-decoration: none;
+  text-align: center;
+}
+
+</style>

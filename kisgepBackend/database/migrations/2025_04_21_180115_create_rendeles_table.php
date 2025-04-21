@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('rendeles', function (Blueprint $table) {
             $table->id();
-            $table->string('rendeles_azonosito', 6)->unique()->nullable();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->string('rendeles_azonosito', 6)->nullable();
             $table->decimal('teljes_osszeg', 10, 2);
-            $table->enum('statusz', ['feldolgozas_alatt', 'visszaigazolva', 'kiszallitas_alatt', 'teljesitve', 'torolt'])->default('feldolgozas_alatt');
+            $table->string('statusz')->default('feldolgozas_alatt');
             $table->text('megjegyzes')->nullable();
             $table->timestamps();
+            
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->index('rendeles_azonosito');
         });
     }
 

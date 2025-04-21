@@ -47,24 +47,21 @@ export default {
       try {
   const response = await axios.post('http://localhost:8000/api/login', {
     email: this.email,
-    jelszo: this.password  // Changed from password to jelszo to match backend expectation
+    jelszo: this.password
   }, {
-    withCredentials: false,  // Added CORS configuration
+    withCredentials: false,
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     }
   });
         
-        // Store token and user data
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
-        // Success message
         this.message = 'Sikeres bejelentkezés!';
         this.messageClass = 'alert-success';
         
-        // Redirect to home or dashboard after successful login
         setTimeout(() => {
           this.$router.push('/');
         }, 1000);
@@ -151,18 +148,14 @@ export default {
 .btn {
   width: 100%;
   max-width: 400px;
-  background: #f1c40f;
-  color: #fff;
+  background-color: #858a91;
+  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
   border: none;
-  padding: 12px;
-  border-radius: 50px;
   cursor: pointer;
+  text-decoration: none;
+  margin-top: auto;
   font-size: 16px;
-  transition: background 0.3s ease, transform 0.3s ease;
-}
-
-.btn:hover {
-  background: #d4ac0d;
-  transform: translateY(-2px);
 }
 </style>

@@ -1,0 +1,88 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Rendeles;
+use App\Models\RendelesTermek;
+use App\Models\Termek;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class RendelesController extends Controller
+{
+    
+    public function storeDirect(Request $request)
+    {
+        $request->validate([
+            'megjegyzes' => 'nullable|string|max:1000',
+            'basket_items' => 'required|array',
+        ]);
+        
+        $teljesOsszeg = 0;
+        foreach ($request->basket_items as $item) {
+            $napokSzama = (strtotime($item['vegso_datum']) - strtotime($item['kezdo_datum'])) / (60 * 60 * 24) + 1;
+            $termek = Termek::findOrFail($item['termek_id']);
+            $teljesOsszeg += $termek->ar * $item['mennyiseg'] * $napokSzama;
+        }
+        
+        $rendeles = new Rendeles();
+        $rendeles->user_id = Auth::check() ? Auth::id() : null;
+        $rendeles->teljes_osszeg = $teljesOsszeg + ($request->deposit_amount ?? 50000);
+        $rendeles->statusz = 'feldolgozas_alatt';
+        $rendeles->megjegyzes = $request->megjegyzes ?? '';
+        
+        $rendeles_azonosito = $request->rendeles_azonosito;
+        if (empty($rendeles_azonosito) || Rendeles::where('rendeles_azonosito', $rendeles_azonosito)->exists()) {
+            $rendeles_azonosito = $this->generateUniqueOrderIdentifier();
+        }
+        
+        $rendeles->rendeles_azonosito = $rendeles_azonosito;
+        $rendeles->save();
+        
+        foreach ($request->basket_items as $item) {
+            $termek = Termek::findOrFail($item['termek_id']);
+            
+            $napokSzama = (strtotime($item['vegso_datum']) - strtotime($item['kezdo_datum'])) / (60 * 60 * 24) + 1;
+            $ar = $termek->ar * $napokSzama;
+            
+            $rendelesTermek = new RendelesTermek();
+            $rendelesTermek->rendeles_id = $rendeles->id;
+            $rendelesTermek->termek_id = $item['termek_id'];
+            $rendelesTermek->mennyiseg = $item['mennyiseg'];
+            $rendelesTermek->kezdo_datum = $item['kezdo_datum'];
+            $rendelesTermek->vegso_datum = $item['vegso_datum'];
+            $rendelesTermek->ar = $ar;
+            
+            $rendelesTermek->rendeles_azonosito = $rendeles_azonosito;
+            
+            $rendelesTermek->save();
+        }
+        
+        return response()->json([
+            'message' => 'Rendelés sikeresen rögzítve',
+            'rendeles_azonosito' => $rendeles_azonosito,
+            'status' => 'success'
+        ], 201);
+    }
+    
+    public function createRendelesTermekTable()
+    {
+        Schema::create('rendeles_termek', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('rendeles_id');
+            $table->unsignedBigInteger('termek_id');
+            $table->string('rendeles_azonosito', 6)->nullable();
+            $table->integer('mennyiseg')->default(1);
+            $table->date('kezdo_datum');
+            $table->date('vegso_datum');
+            $table->decimal('ar', 10, 2);
+            $table->timestamps();
+            
+            $table->foreign('rendeles_id')->references('id')->on('rendeles')->onDelete('cascade');
+            $table->foreign('termek_id')->references('id')->on('termekek')->onDelete('cascade');
+        });
+    }
+    
+}

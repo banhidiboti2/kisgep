@@ -13,7 +13,6 @@ class TermekController
     public function index()
     {
         $termekek = Termek::all()->map(function($termek) {
-            // Kép base64 formátumba alakítása
             $kepBase64 = base64_encode($termek->kep);
             
             return [

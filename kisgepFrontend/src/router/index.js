@@ -9,6 +9,7 @@ import WoodAndMetalView from '@/views/WoodAndMetalView.vue'
 import ProfileView from '@/views/ProfileView.vue'
 import FrequentlyAskedView from '@/views/FrequentlyAskedView.vue'
 import PrivacyNoticeView from '@/views/PrivacyNoticeView.vue'
+import OrderConfirmationView from '@/views/OrderConfirmationView.vue'
 
 const routes = [
   {
@@ -65,9 +66,9 @@ const routes = [
 
   },
   {
-    path: '/confirmation',
+    path: '/order-confirmation',
     name: 'OrderConfirmation',
-    component: () => import('../views/OrderConfirmationView.vue')
+    component: OrderConfirmationView
   }
 ]
 

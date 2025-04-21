@@ -46,14 +46,12 @@ export default {
     };
   },
   computed: {
-    // Csak az első 12 termék megjelenítése
     limitedItems() {
       return this.items.slice(0, 12);
     }
   },
   methods: {
     addToBasket(item) {
-      // Create a copy of the item with consistent property names and add image
       const basketItem = {
         id: item.id,
         name: item.name || item.nev,
@@ -65,12 +63,10 @@ export default {
       this.basket.push(basketItem);
       localStorage.setItem('basket', JSON.stringify(this.basket));
       
-      // Show confirmation to user
-      alert('Termék hozzáadva a kosárhoz!');
     },
 
     fetchProducts() {
-      if (this.fetchedData) return; // Prevent duplicate calls
+      if (this.fetchedData) return;
       
       this.loading = true;
       this.error = null;
@@ -90,28 +86,22 @@ export default {
     },
 
     getProductImage(item) {
-      // Ha a kép base64 formátumban van
       if (item.kep && typeof item.kep === 'string') {
-        // Ellenőrizzük, hogy a kép már tartalmaz-e data URI sémát
         if (item.kep.startsWith('data:image')) {
           return item.kep;
         } else {
-          // Ha nyers base64 adat, hozzáadjuk a data URI sémát
           return `data:image/png;base64,${item.kep}`;
         }
       }
       
-      // Ha van image_url, használjuk azt
       if (item.image_url) {
         return item.image_url;
       }
       
-      // Alternatív megoldás: képet lekérni a termék ID alapján
       if (item.id) {
         return `http://127.0.0.1:8000/api/termekek/${item.id}/kep`;
       }
       
-      // Ha egyik sem működik, használunk egy alapértelmezett placeholder képet
       return 'https://via.placeholder.com/200x200?text=Nincs+kép';
     },
   },
@@ -123,7 +113,6 @@ export default {
 </script>
   
 <style scoped>
-/* Minden stílus változatlan marad */
 .product-container {
   transition: transform 0.2s;
 }
@@ -183,6 +172,8 @@ export default {
   border-radius: 0.25rem;
   text-decoration: none;
   margin-left: auto; 
+  border: none;              
+  outline: none;             
 }
 
 .button {
@@ -192,5 +183,7 @@ export default {
   border-radius: 0.25rem;
   text-decoration: none;
   margin-top: auto;
+  border: none;              
+  outline: none;             
 }
 </style>

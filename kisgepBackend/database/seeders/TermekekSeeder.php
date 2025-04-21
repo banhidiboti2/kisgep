@@ -236,10 +236,8 @@ class TermekekSeeder extends Seeder
           
         ];
 
-        // Képek mappája a public könyvtárban
         $kepekMappa = public_path('seed_kepek');
         
-        // Létrehozzuk a mappát, ha nem létezik
         if (!File::exists($kepekMappa)) {
             File::makeDirectory($kepekMappa, 0755, true);
             $this->command->info("Képek mappa létrehozva: {$kepekMappa}");
@@ -247,32 +245,26 @@ class TermekekSeeder extends Seeder
             return;
         }
 
-        // Alapértelmezett kép, ha valamelyik hiányozna
         $placeholderImagePath = public_path('placeholder.jpg');
         
-        // Létrehozzuk az alapértelmezett képet, ha nem létezik
         if (!File::exists($placeholderImagePath)) {
-            // Vagy betöltünk egy minimális képet adatként
             $placeholderBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6NUIwNUVCRTQxNTgzMTFFQTk1RTY5MzQyRUVGRjVGOEYiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6NUIwNUVCRTUxNTgzMTFFQTk1RTY5MzQyRUVGRjVGOEYiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDo1QjA1RUJFMjE1ODMxMUVBOTVFNjkzNDJFRUZGNUY4RiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDo1QjA1RUJFMzE1ODMxMUVBOTVFNjkzNDJFRUZGNUY4RiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PpCDiIIAAAXrSURBVHja7JzfS1NhGMfP2tlsG1mbOCpxmZWZP0pcRhlJEhlEkX9Q1E0XddNFdFUE3dRNQT+giLqoi6CbCsMiiAqzrJSCtKx+WJrLtGlbO32f9YydbefHe/Z6PPt+rzxnZ+ec533e5znP+/Oc96xMkiSGL1gZnwQJkiQJYglJkgSxhCRJglhCkiRBLCFJkiCWkCRJEEtIkiSIJSRJEsQSklbRlvP/SKVS0Wg0HA5PTEz4/f7BwUGfz+dyuZaWlvBvbneCQqGQVqstLS0tLy+vrKysrKzUaDTFxcVKpdJutxsMhng8bjKZOAmiV/rItN1obW3N6/X29/cPDQ2NjY2FQiHUKpXKZDIJAizEXRKJBP6HWvgRlUqVl5fn0ep0uurqaqPR2NDQYLFYdDqd3W4vKyujKjIRHO0Nhx0YGOjs7IR50I9nZ2fRXYvFYoQjlKzVar1er9fr9Q0NDQ0NDRaLpb6+3mAwZO0WsiGICLDp6Wnkw66urqGhIb/fj+e4BPgKmB6MZ3l5ORxot9ubmppaWlpMJlN+fj6vQETB3d7ejszY2dmJMEdXJTDshUwDh4IrdXZ2In3idWxsbGxuboaP5RqIQCyUGAqFvHEhyEEDQS4qKsIz9OvR0dE3b95g1SBYEF5hLgwmg8FgtVpxgGQyKSJBBBAeHxwcfP78OfR3dXUtLi6yP7lQKMRCuLGx8e7du+3t7Tir3++fnJxEjCIYUBjyNP04NjYWCAQ+fvz4/fv3paUl2DCVSqlUKmQDDBs0nJqaun79+vHjx69cudLc3Iy1EYaP9BCK1UMQTl1dXS9evBgZGcGVRFZOsMzDJw4PD9+6devEiRN37twZHh7GAgmaCPIQpFxkppcvX758+TIajUI3mznY97Ozs/fu3Tt69OjTp0+xwDt69Cii/fjx4+Pj45mDYDEMuX/+/Nnc3Hz58uXh4eHNNxb748ePjx07dv/+fTioGAVhMXP27NkfP36IMJfJ7Kf9/f3nzp0LBoNbhj8+dOTIkefPn6dSKYH7z3q5gQn7y5cvmYPsqLRaLS9evIhGoyLcx2QWZAis9+/fZ29cg8Hg9PR0zg+CM0Pgy8tLk5OTmYNgjQdHEjjItm+g/qurqz6fLx6PC20eYwP0LRqNLi8vZw4CcwnvO7mj14A6jyRFcEsJ4yHVkUgkExfZsSUSiXA4bLVaecnV2wLJ3CiZTPr9fjFvMQ8kk9DAwIDQhtkuBUEYRp8OhUKZg2g0mosXL1ZUVAhqlB3cQu66u9fW1mxtrLq6WugDZTpLcerUqVOnTmUS/mVlZU1NTYJYLNMAeuHChQMHDqyurooABHvVU6dOffv2LXODqVSq1tbWiooKoZdiOKBGo7l06dL+/fsRZbziZg9SV1d34cIFMW0Vtm/fvkePHiGJCnO7sL2tQn19/YMHDzB8hQnCyxqyoaHh4cOH+fn5Ihtm/72J3djYeP/+fSxdBXSU/QHi7e7uvnPnjtjW9+mCaDSaixcvdnR0CDDJ7vgeq6ur6+bNm52dnWIeGmR3EaTfv39/7dq1q1evNjU1bWdyLz4QrLhv3Lhx8+ZNIR9b7dYgSLkXL168fPky2u7fv79QKLTvXgZJR0ZGuru7nz171tvbm21F7rZAUkECgQDukt6/f9/T0xOJRLbTPOeS8l5C8j2D1hLpIFtbW8+cOYPn3t7e5eVlLhcK/A+C1aqFhYWPHz9iJI2Ojv6Ox+fYajqdDptGh8NRVVVls9kwrLLnUDQ/IFhUYrn09evXsbGxQCAwMzMDHIwPuENBQQGAHQ6HyWTC87+BxOVPjHL0I8JM/hZwhv6DYMVkdXV1ZWUF8Q/v+BtQCQ0GG4ZUKpVOpyvgjN/vdzu6//Ht9/7VYxJaT9I+PV5mSpIgAg0OAm9qS4JytjvEuCRIgiRIgiRIgiRIgiRIgiSIT/0RYABGkgmwH2qMAwAAAABJRU5ErkJggg==';
             $placeholderImage = base64_decode($placeholderBase64);
             file_put_contents($placeholderImagePath, $placeholderImage);
             $this->command->info("Placeholder kép létrehozva: {$placeholderImagePath}");
         }
 
-        // Termékek létrehozása
         $counter = 0;
         
         foreach ($termekek as $termekAdat) {
             $kepFajl = $termekAdat['kep_fajl'];
             $kepUtvonal = $kepekMappa . '/' . $kepFajl;
             
-            // Ha nincs meg a kép fájl, használjuk a placeholder-t
             if (!File::exists($kepUtvonal)) {
                 $this->command->warn("A kép nem található: {$kepUtvonal}");
                 $this->command->warn("Helyette a placeholder-t használjuk");
                 $kepUtvonal = $placeholderImagePath;
             } else {
-                // Ellenőrizzük a kép formátumát
                 $imageInfo = @getimagesize($kepUtvonal);
                 if ($imageInfo === false) {
                     $this->command->warn("A fájl nem érvényes kép: {$kepUtvonal}");
@@ -280,7 +272,6 @@ class TermekekSeeder extends Seeder
                     $kepUtvonal = $placeholderImagePath;
                 } else {
                     $mimeType = $imageInfo['mime'];
-                    // Támogatott formátumok ellenőrzése
                     $supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
                     if (!in_array($mimeType, $supportedTypes)) {
                         $this->command->warn("Nem támogatott képformátum ({$mimeType}): {$kepUtvonal}");
@@ -293,10 +284,8 @@ class TermekekSeeder extends Seeder
             }
             
             try {
-                // Kép beolvasása bináris formátumban
                 $kepAdat = file_get_contents($kepUtvonal);
                 
-                // Termék létrehozása
                 Termek::create([
                     'nev' => $termekAdat['nev'],
                     'leiras' => $termekAdat['leiras'],

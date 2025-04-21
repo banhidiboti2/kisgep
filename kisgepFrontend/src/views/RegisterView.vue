@@ -61,7 +61,6 @@ export default {
   },
   methods: {
     async saveData() {
-  // Basic validation
   if (this.password !== this.confirmPassword) {
     this.message = 'A jelszavak nem egyeznek!';
     this.messageClass = 'alert-danger';
@@ -72,13 +71,10 @@ export default {
   this.message = '';
   
   try {
-    // Add withCredentials: false to avoid CORS issues
     const response = await axios.post('http://localhost:8000/api/register', {
       vezeteknev: this.lastname,
       keresztnev: this.firstname,
-      // Check if your backend expects "jelszo" or "password"
       jelszo: this.password,
-      // Alternatively try: password: this.password,
       email: this.email,
       telefonszam: this.phone
     }, { 
@@ -91,11 +87,9 @@ export default {
     
     console.log('Registration successful:', response.data);
     
-    // Handle success
     this.message = 'Sikeres regisztráció!';
     this.messageClass = 'alert-success';
     
-    // Clear form
     this.lastname = '';
     this.firstname = '';
     this.password = '';
@@ -103,23 +97,19 @@ export default {
     this.email = '';
     this.phone = '';
     
-    // Redirect to login page after successful registration
     setTimeout(() => {
       this.$router.push('/login');
     }, 2000);
     
   } catch (error) {
-    // Enhanced error handling
     console.error('Full error object:', error);
     
     let errorMessage = 'Hiba történt a regisztráció során!';
     
     if (error.response) {
-      // Server responded with an error
       console.error('Error response data:', error.response.data);
       console.error('Error status:', error.response.status);
       
-      // Show validation errors if available
       if (error.response.data && error.response.data.errors) {
         const validationErrors = Object.values(error.response.data.errors)
           .flat()
@@ -129,11 +119,9 @@ export default {
         errorMessage = error.response.data.message;
       }
     } else if (error.request) {
-      // Request was made but no response was received
       console.error('No response received:', error.request);
       errorMessage = 'A szerver nem válaszol. Ellenőrizze az internetkapcsolatot.';
     } else {
-      // Something happened in setting up the request
       console.error('Request setup error:', error.message);
     }
     
@@ -204,26 +192,22 @@ export default {
 }
 
 .form-group input:focus {
-  border-color: #f1c40f;
-  box-shadow: 0 0 10px rgba(241, 196, 15, 0.3);
+  border-color: #858a91;
+  box-shadow: 0 0 10px rgba(133, 138, 145, 0.3);
 }
 
 .btn {
   width: 100%; 
   max-width: 400px; 
-  background: #f1c40f;
-  color: #fff;
+  background-color: #858a91;
+  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
   border: none;
-  padding: 12px;
-  border-radius: 50px;
   cursor: pointer;
+  text-decoration: none;
+  margin-top: auto;
   font-size: 16px;
-  transition: background 0.3s ease, transform 0.3s ease;
-}
-
-.btn:hover:not(:disabled) {
-  background: #d4ac0d;
-  transform: translateY(-2px);
 }
 
 .btn:disabled {

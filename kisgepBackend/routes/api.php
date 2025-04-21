@@ -6,29 +6,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RendelesController;
 
-// Public routes
 Route::post('/rendeles/direct', [RendelesController::class, 'storeDirect']);
+Route::post('/rendeles', [RendelesController::class, 'storeDirect']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/termekek', [TermekController::class, 'index']); // Public product listing
+Route::get('/termekek', [TermekController::class, 'index']); 
 Route::get('/termekek/{id}', [TermekController::class, 'show']);
 
-// Az alábbi sort vagy töröld, vagy cseréld ki a RendelesController-re
-// Route::middleware('auth:sanctum')->post('/orders', 'OrderController@store');
+
 Route::middleware('auth:sanctum')->post('/orders', [RendelesController::class, 'store']);
 
-// Protected routes - require authentication
 Route::middleware('auth:sanctum')->group(function () {
-    // User profile route
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
     
-    // Protected product routes (create, update, delete)
     Route::post('/termekek', [TermekController::class, 'store']);
     Route::put('/termekek/{termek}', [TermekController::class, 'update']);
     Route::delete('/termekek/{termek}', [TermekController::class, 'destroy']);
     
-    // A duplikált route-okat eltávolítottam innen
-    // Add other protected routes here
 });

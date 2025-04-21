@@ -5,18 +5,19 @@ use Illuminate\Http\Request;
 use App\Models\Rendeles;
 use App\Models\RendelesTermek;
 use App\Models\Kosar;
-use App\Models\KosarTermek; // Adding the missing import
+use App\Models\KosarTermek;
+use App\Models\Termek;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmation;
 
 class RendelesController extends Controller
 {
-    // ...existing code...
     
     public function store(Request $request)
     {
-        // Ellenőrizzük, hogy a felhasználó be van-e jelentkezve
         if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'A rendeléshez be kell jelentkezni.');
         }
@@ -31,7 +32,6 @@ class RendelesController extends Controller
             'megjegyzes' => 'nullable|string|max:1000',
         ]);
         
-        // Teljes összeg kiszámítása
         $teljesOsszeg = 0;
         foreach ($kosar->termekek as $kosarTermek) {
             $napokSzama = (strtotime($kosarTermek->vegso_datum) - strtotime($kosarTermek->kezdo_datum)) / (60 * 60 * 24) + 1;
@@ -41,10 +41,8 @@ class RendelesController extends Controller
         DB::beginTransaction();
         
         try {
-            // 6 számjegyű egyedi rendelésazonosító generálása
             $rendelesAzonosito = $this->generateUniqueOrderIdentifier();
             
-            // Rendelés létrehozása
             $rendeles = Rendeles::create([
                 'user_id' => Auth::id(),
                 'teljes_osszeg' => $teljesOsszeg,
@@ -53,7 +51,6 @@ class RendelesController extends Controller
                 'rendeles_azonosito' => $rendelesAzonosito,
             ]);
             
-            // Termékek átvitele a rendeléshez
             foreach ($kosar->termekek as $kosarTermek) {
                 $napokSzama = (strtotime($kosarTermek->vegso_datum) - strtotime($kosarTermek->kezdo_datum)) / (60 * 60 * 24) + 1;
                 $termekAr = $kosarTermek->termek->ar * $napokSzama;
@@ -68,7 +65,6 @@ class RendelesController extends Controller
                 ]);
             }
             
-            // Kosár kiürítése
             KosarTermek::where('kosar_id', $kosar->id)->delete();
             
             DB::commit();
@@ -91,10 +87,8 @@ class RendelesController extends Controller
         $identifier = '';
         
         while (!$found) {
-            // 6 számjegyű azonosító generálása
             $identifier = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
             
-            // Ellenőrizzük, hogy létezik-e már ilyen azonosító
             $exists = Rendeles::where('rendeles_azonosito', $identifier)->exists();
             
             if (!$exists) {
@@ -113,21 +107,12 @@ class RendelesController extends Controller
      */
     public function storeDirect(Request $request)
     {
-        // Ellenőrizzük, hogy a felhasználó be van-e jelentkezve
-        if (!Auth::check()) {
-            return response()->json(['message' => 'A rendeléshez be kell jelentkezni.'], 401);
-        }
-        
         $request->validate([
             'megjegyzes' => 'nullable|string|max:1000',
             'basket_items' => 'required|array',
-            'basket_items.*.termek_id' => 'required|exists:termekek,id',
-            'basket_items.*.mennyiseg' => 'required|integer|min:1',
-            'basket_items.*.kezdo_datum' => 'required|date',
-            'basket_items.*.vegso_datum' => 'required|date|after_or_equal:basket_items.*.kezdo_datum',
+            'email' => 'required|email',
         ]);
-        
-        // Teljes összeg kiszámítása
+
         $teljesOsszeg = 0;
         foreach ($request->basket_items as $item) {
             $napokSzama = (strtotime($item['vegso_datum']) - strtotime($item['kezdo_datum'])) / (60 * 60 * 24) + 1;
@@ -138,35 +123,69 @@ class RendelesController extends Controller
         DB::beginTransaction();
         
         try {
-            // 6 számjegyű egyedi rendelésazonosító generálása
             $rendelesAzonosito = $this->generateUniqueOrderIdentifier();
             
-            // Rendelés létrehozása
-            $rendeles = Rendeles::create([
-                'user_id' => Auth::id(),
-                'teljes_osszeg' => $teljesOsszeg,
-                'statusz' => 'feldolgozas_alatt',
-                'megjegyzes' => $request->megjegyzes,
-                'rendeles_azonosito' => $rendelesAzonosito,
-            ]);
+            $rendeles = new Rendeles();
+
+            $userId = null;
+            if (Auth::check()) {
+                $userId = Auth::id();
+            } elseif ($request->has('user_id') && !empty($request->user_id)) {
+                $userId = $request->user_id;
+            }
+
+            $rendeles->user_id = $userId;
+            $rendeles->email = $request->email; 
+            $rendeles->teljes_osszeg = $teljesOsszeg + ($request->deposit_amount ?? 50000);
+            $rendeles->statusz = 'feldolgozas_alatt';
+            $rendeles->megjegyzes = $request->megjegyzes ?? '';
+            $rendeles->rendeles_azonosito = $rendelesAzonosito;
+            $rendeles->save();
             
-            // Termékek hozzáadása a rendeléshez
             foreach ($request->basket_items as $item) {
-                $napokSzama = (strtotime($item['vegso_datum']) - strtotime($item['kezdo_datum'])) / (60 * 60 * 24) + 1;
-                $termek = \App\Models\Termek::findOrFail($item['termek_id']);
-                $termekAr = $termek->ar * $napokSzama;
+                $termek = Termek::findOrFail($item['termek_id']);
                 
-                RendelesTermek::create([
-                    'rendeles_id' => $rendeles->id,
-                    'termek_id' => $item['termek_id'],
-                    'mennyiseg' => $item['mennyiseg'],
-                    'kezdo_datum' => $item['kezdo_datum'],
-                    'vegso_datum' => $item['vegso_datum'],
-                    'ar' => $termekAr,
-                ]);
+                $napokSzama = (strtotime($item['vegso_datum']) - strtotime($item['kezdo_datum'])) / (60 * 60 * 24) + 1;
+                $ar = $termek->ar * $napokSzama;
+                
+                $rendelesTermek = new RendelesTermek();
+                $rendelesTermek->rendeles_id = $rendeles->id;
+                $rendelesTermek->termek_id = $item['termek_id'];
+                $rendelesTermek->mennyiseg = $item['mennyiseg'];
+                $rendelesTermek->kezdo_datum = $item['kezdo_datum'];
+                $rendelesTermek->vegso_datum = $item['vegso_datum'];
+                $rendelesTermek->ar = $ar;
+                
+                $rendelesTermek->rendeles_azonosito = $rendelesAzonosito;
+                
+                $rendelesTermek->save();
             }
             
             DB::commit();
+            
+            try {
+                \Log::info('E-mail küldés megkezdése: ' . $request->email);
+                config(['mail.default' => 'smtp']);
+                config(['mail.mailers.smtp.host' => 'smtp.gmail.com']);
+                config(['mail.mailers.smtp.port' => 587]);
+                config(['mail.mailers.smtp.encryption' => 'tls']);
+                config(['mail.mailers.smtp.username' => 'abkisgep@gmail.com']);
+                config(['mail.mailers.smtp.password' => 'idmrpkfkkqcxfmkm']);
+                
+                \Log::info('Mail konfiguráció: ' . json_encode(config('mail')));
+                
+                Mail::raw("Rendelés visszaigazolás\n\nKöszönjük rendelését! Az Ön rendelésének azonosítója: " . 
+                    $rendelesAzonosito . "\n\nÜdvözlettel,\nA&B Kisgép Kölcsönző", function ($message) use ($request, $rendelesAzonosito) {
+                    $message->to($request->email)
+                            ->from('abkisgep@gmail.com', 'A&B Kisgép Kölcsönző')
+                            ->subject('Rendelés visszaigazolás - #' . $rendelesAzonosito);
+                });
+                
+                \Log::info('E-mail sikeresen elküldve');
+            } catch (\Exception $e) {
+                \Log::error('E-mail küldési hiba: ' . $e->getMessage());
+                \Log::error('Részletes hiba: ' . $e->getTraceAsString());
+            }
             
             return response()->json([
                 'message' => 'Rendelésed sikeresen leadva!',
@@ -179,3 +198,5 @@ class RendelesController extends Controller
         }
     }
 }
+
+

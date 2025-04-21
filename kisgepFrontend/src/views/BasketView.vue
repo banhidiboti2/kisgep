@@ -1,68 +1,112 @@
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Kosár</h1>
-    
-    <div v-if="basket.length === 0" class="text-center py-8">
-      <p>A kosár üres.</p>
-      <router-link to="/" class="inline-block mt-4 px-4 py-2 bg-gray-200 rounded">Vissza a főoldalra</router-link>
-    </div>
-    
-    <div v-else>
-      <!-- Items in the basket -->
-      <div class="bg-white rounded shadow-md p-4 mb-4">
-        <div v-for="(item, index) in basket" :key="index" class="border-b py-4 flex items-center">
-          <div class="w-20 h-20 flex-shrink-0">
-            <img :src="item.image" alt="Termék kép" class="w-full h-full object-contain">
+  <div class="basket-view">
+    <div class="container">
+      <h1>Kosár</h1>
+      
+      <div v-if="basket.length === 0" class="empty-basket">
+        <p>A kosár üres.</p>
+        <router-link to="/" class="back-button">Vissza a főoldalra</router-link>
+      </div>
+      
+      <div v-else>
+        <div class="basket-items">
+          <div v-for="(item, index) in basket" :key="index" class="basket-item">
+            <div class="item-image-container">
+              <img :src="item.image" alt="Termék kép" class="product-image">
+            </div>
+            <div class="item-details">
+              <h3>{{ item.name }}</h3>
+              <p>{{ item.description }}</p>
+              <p class="item-price">{{ item.price }} Ft / nap</p>
+            </div>
+            <button @click="removeItem(index)" class="delete-button">
+              Törlés
+            </button>
           </div>
-          <div class="ml-4 flex-grow">
-            <h3 class="font-semibold">{{ item.name }}</h3>
-            <p>{{ item.description }}</p>
-            <p class="text-gray-700">{{ item.price }} Ft / nap</p>
+        </div>
+        
+        <div class="order-section">
+          <h2>Bérlés időtartama</h2>
+          <div class="rental-days">
+            <button @click="decrementDays">-</button>
+            <span>{{ rentalDays }} nap</span>
+            <button @click="incrementDays">+</button>
           </div>
-          <button @click="removeItem(index)" class="ml-4 text-red-500">
-            Törlés
-          </button>
         </div>
-      </div>
-      
-      <!-- Rental days selector -->
-      <div class="bg-white rounded shadow-md p-4 mb-4">
-        <h2 class="font-semibold mb-2">Bérlés időtartama</h2>
-        <div class="flex items-center">
-          <button @click="decrementDays" class="px-3 py-1 border rounded">-</button>
-          <span class="mx-4">{{ rentalDays }} nap</span>
-          <button @click="incrementDays" class="px-3 py-1 border rounded">+</button>
-          <button @click="promptRentalDays" class="ml-4 text-blue-500">Egyedi</button>
+        
+        <div class="order-section">
+          <h2>Megjegyzés a rendeléshez</h2>
+          <textarea 
+            v-model="orderComment" 
+            placeholder="Itt adhat meg megjegyzést a rendeléshez (opcionális)..."
+            class="order-comment"
+            rows="3"
+          ></textarea>
         </div>
-      </div>
-      
-      <!-- Order summary -->
-      <div class="bg-white rounded shadow-md p-4 mb-4">
-        <h2 class="font-semibold mb-2">Rendelés összegzése</h2>
-        <div class="flex justify-between mb-2">
-          <span>Napi díj:</span>
-          <span>{{ dailyTotal }} Ft</span>
+        
+        <div class="order-section">
+          <h2>Rendelési adatok</h2>
+          
+          <div class="form-group">
+            <label for="email">E-mail cím*</label>
+            <input 
+              type="email" 
+              id="email" 
+              v-model="orderEmail" 
+              class="order-input" 
+              placeholder="Az Ön e-mail címe" 
+              required
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="orderComment">Megjegyzés (opcionális)</label>
+            <textarea 
+              id="orderComment"
+              v-model="orderComment" 
+              class="order-comment" 
+              rows="3" 
+              placeholder="Itt adhat meg megjegyzést a rendeléshez..."
+            ></textarea>
+          </div>
         </div>
-        <div class="flex justify-between mb-2">
-          <span>Napok száma:</span>
-          <span>{{ rentalDays }}</span>
+        
+        <div class="order-section">
+          <h2>Rendelés összegzése</h2>
+          <div class="order-summary">
+            <div class="summary-row">
+              <span>Napi díj:</span>
+              <span>{{ dailyTotal }} Ft</span>
+            </div>
+            <div class="summary-row">
+              <span>Napok száma:</span>
+              <span>{{ rentalDays }}</span>
+            </div>
+            <div class="summary-row">
+              <span>Részösszeg:</span>
+              <span>{{ subtotalPrice }} Ft</span>
+            </div>
+            <div class="summary-row">
+              <span>Kaució:</span>
+              <span>{{ depositAmount }} Ft</span>
+            </div>
+            <div class="summary-row total">
+              <span>Végösszeg:</span>
+              <span>{{ totalPrice }} Ft</span>
+            </div>
+          </div>
         </div>
-        <div class="flex justify-between font-bold text-lg">
-          <span>Végösszeg:</span>
-          <span>{{ totalPrice }} Ft</span>
-        </div>
-      </div>
-      
-      <!-- Action buttons -->
-      <div class="flex justify-between">
-        <button @click="clearBasket" class="px-4 py-2 bg-gray-300 rounded">Kosár ürítése</button>
-        <div>
-          <button v-if="isLoggedIn" @click="placeOrder" :disabled="orderInProgress" class="px-4 py-2 bg-green-500 text-white rounded mr-2">
-            {{ orderInProgress ? 'Feldolgozás...' : 'Megrendelés' }}
-          </button>
-          <button v-else @click="emergencyOrder" class="px-4 py-2 bg-yellow-500 text-white rounded">
-            Gyors megrendelés
-          </button>
+        
+        <div class="top-buttons">
+          <button @click="clearBasket" class="clear-button">Kosár ürítése</button>
+          <div>
+            <button v-if="isLoggedIn" @click="placeOrder" :disabled="orderInProgress" class="order-button">
+              {{ orderInProgress ? 'Feldolgozás...' : 'Megrendelés' }}
+            </button>
+            <button v-else @click="emergencyOrder" class="order-button emergency">
+              Gyors megrendelés
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -72,9 +116,8 @@
 <script>
 import axios from 'axios';
 
-// Configure axios with a proper base URL and CSRF protection
-axios.defaults.baseURL = 'http://localhost:8000'; // Adjust to your Laravel API URL
-axios.defaults.withCredentials = false; // Set to false to avoid CORS issues with Laravel Sanctum
+axios.defaults.baseURL = 'http://localhost:8000';
+axios.defaults.withCredentials = false;
 
 export default {
   name: 'BasketView',
@@ -82,29 +125,46 @@ export default {
     return {
       basket: JSON.parse(localStorage.getItem('basket')) || [],
       orderInProgress: false,
-      rentalDays: 1, // Default rental days
-      isLoggedIn: false // We'll update this in created/mounted
+      rentalDays: 1,
+      isLoggedIn: false,
+      depositAmount: 50000,
+      orderComment: '',
+      orderEmail: '' // Új adat a rendelési e-mailhez
     };
   },
   computed: {
     dailyTotal() {
       return this.basket.reduce((total, item) => total + (parseFloat(item.price) || 0), 0);
     },
-    totalPrice() {
+    subtotalPrice() {
       return this.dailyTotal * this.rentalDays;
+    },
+    totalPrice() {
+      return this.subtotalPrice + this.depositAmount;
     }
   },
   created() {
-    // Do a manual check
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     if (token && user) {
       console.log('Created hook: Setting login state to true');
       this.isLoggedIn = true;
     }
+
+    // Ha be van jelentkezve a felhasználó, automatikusan betöltjük az e-mail címét
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        if (user.email) {
+          this.orderEmail = user.email;
+        }
+      } catch (e) {
+        console.error('User data parsing error:', e);
+      }
+    }
   },
   mounted() {
-    // Double manual check
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
     if (token && user) {
@@ -112,11 +172,9 @@ export default {
       this.isLoggedIn = true;
     }
     
-    // Add event listener to recheck login when tab gets focus
     window.addEventListener('focus', this.checkLoginStatus);
   },
   beforeDestroy() {
-    // Remove event listener when component is destroyed
     window.removeEventListener('focus', this.checkLoginStatus);
   },
   methods: {
@@ -135,8 +193,12 @@ export default {
         console.log('User is not logged in ❌');
       }
     },
+
+    generateOrderIdentifier() {
+      // 6 jegyű szám generálása (100000-999999 között)
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    },
     
-    // Debug method for testing
     debugLoginStatus() {
       const token = localStorage.getItem('token');
       const user = localStorage.getItem('user');
@@ -147,32 +209,56 @@ export default {
     },
     
     async emergencyOrder() {
-      // This bypasses the login check
       if (this.basket.length === 0) {
         alert('A kosár üres!');
         return;
       }
       
-      const confirmed = confirm('Ez a funkció login nélkül teszi lehetővé a rendelést. Biztos folytatja?');
-      if (!confirmed) return;
+      // E-mail cím ellenőrzése
+      if (!this.orderEmail || !this.validateEmail(this.orderEmail)) {
+        alert('Kérjük, adjon meg egy érvényes e-mail címet!');
+        return;
+      }
       
-      // The rest is similar to placeOrder but without login checks
+      // Felhasználói adatok kinyerése a localStorage-ból vendég rendelés esetén is
+      const userData = localStorage.getItem('user');
+      let userId = null;
+      
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          userId = user.id;
+        } catch (e) {
+          console.error('User data parsing error:', e);
+        }
+      }
+      
       try {
-        // Prepare the order data
+        // Rendelésazonosító generálása
+        const orderIdentifier = this.generateOrderIdentifier();
+        
         const orderData = {
-          items: this.basket.map(item => ({
-            product_id: item.id,
-            quantity: 1,
-            price: item.price,
-            name: item.name
+          // Megjegyzés mező hozzáadása a user input alapján
+          megjegyzes: this.orderComment,
+          email: this.orderEmail, // E-mail küldése a backendnek
+          
+          // Kosár elemek a megfelelő szerkezetben
+          basket_items: this.basket.map(item => ({
+            termek_id: item.id,
+            mennyiseg: 1,
+            kezdo_datum: new Date().toISOString().slice(0, 10),
+            vegso_datum: this.getEndDate(this.rentalDays)
           })),
-          rental_days: this.rentalDays,
-          start_date: new Date().toISOString().slice(0, 10),
-          end_date: this.getEndDate(this.rentalDays),
-          total_price: this.totalPrice
+          
+          // Egyéb adatok
+          total_price: this.totalPrice,
+          deposit_amount: this.depositAmount,
+          rendeles_azonosito: orderIdentifier,
+          // Explicit felhasználói ID átadása, ha be van jelentkezve
+          user_id: userId,
+          is_guest: userId === null
         };
         
-        // Send the order (without auth header)
         const response = await axios.post('http://localhost:8000/api/rendeles/direct', orderData, {
           headers: {
             'Content-Type': 'application/json',
@@ -180,11 +266,18 @@ export default {
           }
         });
         
-        alert('Sikeres rendelés!');
+        // Mentjük a rendelésazonosítót localStorage-ba
+        const finalOrderId = response.data?.rendeles_azonosito || orderIdentifier;
+        localStorage.setItem('lastOrderId', finalOrderId);
+        
+        // Kosár ürítése
         this.clearBasket();
+        
+        // Átirányítás a megerősítő oldalra alert helyett
+        this.$router.push('/order-confirmation');
       } catch (error) {
         console.error('Emergency order error:', error);
-        alert('Hiba történt a rendelés során.');
+        alert('Hiba történt a rendelés során: ' + (error.response?.data?.message || error.message));
       }
     },
     
@@ -196,14 +289,6 @@ export default {
     clearBasket() {
       this.basket = [];
       localStorage.setItem('basket', JSON.stringify(this.basket));
-    },
-    
-    promptRentalDays() {
-      const days = prompt("Hány napra szeretné bérelni a termékeket?", this.rentalDays);
-      const parsedDays = parseInt(days);
-      if (!isNaN(parsedDays) && parsedDays > 0) {
-        this.rentalDays = parsedDays;
-      }
     },
     
     incrementDays() {
@@ -221,70 +306,89 @@ export default {
       date.setDate(date.getDate() + days - 1);
       return date.toISOString().slice(0, 10);
     },
+    placeOrder() {
+      if (this.basket.length === 0) {
+        alert('A kosár üres!');
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      let userId = null;
+      let userEmail = this.orderEmail;
+
+      if (token) {
+        try {
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          if (userData.id) {
+            userId = userData.id;
+          }
+        } catch (e) {
+          console.error('User parsing error:', e);
+        }
+      }
+
+      this.orderInProgress = true;
+      
+      const orderIdentifier = this.generateOrderIdentifier();
+      
+      const orderData = {
+        megjegyzes: this.orderComment,
+        email: userEmail,
+        
+        basket_items: this.basket.map(item => ({
+          termek_id: item.id,
+          mennyiseg: 1,
+          kezdo_datum: new Date().toISOString().slice(0, 10),
+          vegso_datum: this.getEndDate(this.rentalDays)
+        })),
+        
+        total_price: this.totalPrice,
+        deposit_amount: this.depositAmount,
+        rendeles_azonosito: orderIdentifier,
+        user_id: userId
+      };
+      
+      axios.post('http://localhost:8000/api/rendeles/direct', orderData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(response => {
+        console.log('Order response:', response.data);
+        const finalOrderId = response.data.rendeles_azonosito || orderIdentifier;
+        localStorage.setItem('lastOrderId', finalOrderId);
+        
+        this.clearBasket();
+        this.orderInProgress = false;
+        
+        this.$router.push('/order-confirmation');
+      })
+      .catch(error => {
+        console.error('Order error:', error);
+        alert('Hiba történt a rendelés során: ' + (error.response?.data?.message || error.message));
+        this.orderInProgress = false;
+      });
+    },
     
-    async placeOrder() {
-      // ... your existing placeOrder method code ...
+    validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
     }
   }
 };
+
 </script>
 
 <style scoped>
-/* Add these new styles */
-.order-section {
-  margin: 20px 0;
-}
-
-.order-button {
-  background-color: #4CAF50;
-  color: white;
-  font-weight: bold;
-  padding: 0.8rem 1.5rem;
-  border-radius: 0.25rem;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.1rem;
-  transition: background-color 0.3s;
-}
-
-.order-button:hover {
-  background-color: #45a049;
-}
-
-.login-notice {
-  margin: 20px 0;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
-}
-
-.login-notice p {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.login-notice a {
-  color: #007bff;
-  text-decoration: underline;
-}
 .basket-view {
   background-color: rgb(209, 219, 225);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
-  text-align: center;
-  padding-top: 20px;
-}
-
-.basket-view h1 {
-  color: #333;
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 20px;
+  padding: 20px;
 }
 
 .container {
@@ -296,52 +400,84 @@ export default {
   padding: 20px;
 }
 
-.basket-item {
-  border-bottom: 1px solid #ccc;
-  padding: 10px 0;
+h1 {
+  color: #333;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
-.product-image {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
+h2 {
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
-button {
-  background-color: #858a91;
-  color: black;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  text-decoration: none;
-  margin: 0.5rem; 
+.empty-basket {
+  text-align: center;
+  padding: 30px 0;
 }
 
-.back-button {
-  background-color: #858a91;
-  color: black;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  text-decoration: none;
-  margin: 0.5rem; 
+.basket-items {
+  margin-bottom: 20px;
 }
 
-.clear-button {
-  background-color: #858a91;
-  color: black;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  text-decoration: none;
-  margin: 0.5rem;
+.basket-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-.rental-button {
-  background-color: #858a91;
-  color: black;
-  padding: 0.5rem 1rem;
-  border-radius: 0.25rem;
-  text-decoration: none;
-  margin: 0.5rem;
+.item-image-container {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.item-details {
+  flex-grow: 1;
+  margin-left: 15px;
+}
+
+.item-details h3 {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.item-price {
+  color: #4a5568;
+}
+
+.order-section {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.order-summary {
+  width: 100%;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.total {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e2e8f0;
 }
 
 .rental-days {
@@ -354,21 +490,103 @@ button {
   color: black;
   padding: 0.5rem;
   border-radius: 0.25rem;
-  text-decoration: none;
-  margin: 0.5rem;
+  border: none;
+  cursor: pointer;
+  margin: 0 8px;
 }
 
 .rental-days span {
-  margin: 0 1rem;
+  margin: 0 15px;
+  font-size: 1.1rem;
 }
 
 .top-buttons {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-top: 20px;
 }
 
-.rental-controls {
-  margin-bottom: 10px;
+button {
+  background-color: #858a91;
+  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+}
+
+.back-button, .clear-button, .rental-button, .delete-button {
+  background-color: #858a91;
+  color: black;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  text-decoration: none;
+}
+
+.delete-button {
+  color: #e53e3e;
+  background: transparent;
+}
+
+.order-button {
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  padding: 0.8rem 1.5rem;
+  font-size: 1.1rem;
+}
+
+
+
+.order-button:hover {
+  opacity: 0.9;
+}
+
+.order-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.order-comment {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  margin-top: 8px;
+}
+
+.order-comment:focus {
+  outline: none;
+  border-color: #858a91;
+  box-shadow: 0 0 5px rgba(133, 138, 145, 0.3);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.order-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.order-input:focus,
+.order-comment:focus {
+  outline: none;
+  border-color: #858a91;
+  box-shadow: 0 0 5px rgba(133, 138, 145, 0.3);
 }
 </style>
