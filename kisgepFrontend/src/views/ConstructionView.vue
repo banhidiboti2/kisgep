@@ -24,7 +24,12 @@
             <p>{{ item.description || item.leiras }}</p>
             <p>Ár: {{ item.price || item.ar }} Ft</p>
           </div>
-          <button @click="addToBasket(item)" class="button mt-auto">Kosárba</button>
+          <button 
+            @click="addToBasket(item)" 
+            class="button mt-auto"
+            :class="{ 'in-basket': isInBasket(item.id) }">
+            {{ isInBasket(item.id) ? 'Kosárban' : 'Kosárba' }}
+          </button>
         </div>
       </div>
     </div>
@@ -54,9 +59,14 @@ export default {
         image: this.getProductImage(item)
       };
       
-      this.basket.push(basketItem);
-      localStorage.setItem('basket', JSON.stringify(this.basket));
+      if (!this.isInBasket(item.id)) {
+        this.basket.push(basketItem);
+        localStorage.setItem('basket', JSON.stringify(this.basket));
+      }
+    },
 
+    isInBasket(itemId) {
+      return this.basket.some(item => item.id === itemId);
     },
     
     fetchProducts() {
@@ -183,5 +193,10 @@ export default {
   margin-top: auto;
   border: none;
   outline: none;
+}
+
+.button.in-basket {
+  background-color: #4CAF50;
+  color: white;
 }
 </style>

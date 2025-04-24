@@ -5,6 +5,8 @@
       <router-link to="/" class="back-button">Vissza</router-link>
     </div>
 
+    
+
     <div v-if="loading" class="text-center py-8">
       <p>Betöltés...</p>
     </div>
@@ -24,7 +26,12 @@
             <p>{{ item.description || item.leiras }}</p>
             <p>Ár: {{ item.price || item.ar }} Ft</p>
           </div>
-          <button @click="addToBasket(item)" class="button mt-auto">Kosárba</button>
+          <button 
+            @click="addToBasket(item)" 
+            class="button mt-auto"
+            :class="{ 'in-basket': isInBasket(item.id) }">
+            {{ isInBasket(item.id) ? 'Kosárban' : 'Kosárba' }}
+          </button>
         </div>
       </div>
     </div>
@@ -60,9 +67,14 @@ export default {
         image: this.getProductImage(item)
       };
       
-      this.basket.push(basketItem);
-      localStorage.setItem('basket', JSON.stringify(this.basket));
-      
+      if (!this.isInBasket(item.id)) {
+        this.basket.push(basketItem);
+        localStorage.setItem('basket', JSON.stringify(this.basket));
+      }
+    },
+
+    isInBasket(itemId) {
+      return this.basket.some(item => item.id === itemId);
     },
 
     fetchProducts() {
@@ -185,5 +197,31 @@ export default {
   margin-top: auto;
   border: none;              
   outline: none;             
+}
+
+.button.in-basket {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.notification {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 10px 15px;
+  border-radius: 3px;
+  color: white;
+  background-color: #333;
+  z-index: 1000;
+  max-width: 200px;
+}
+
+.notification.success {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.notification.error {
+  background-color: #f44336;
 }
 </style>
