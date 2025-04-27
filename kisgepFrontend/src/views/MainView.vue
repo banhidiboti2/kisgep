@@ -74,7 +74,12 @@
       <p class="font-semibold text-lg">{{ item.name }}</p>
       <p class="my-2">{{ item.description }}</p>
       <p class="font-bold my-2">Ár: {{ item.price }} Ft</p>
-      <button @click="addToBasket(item)" class="button hover:bg-gray-400 transition-colors">Kosárba</button>
+      <button 
+        @click="addToBasket(item)" 
+        class="button hover:bg-gray-400 transition-colors"
+        :class="{ 'in-basket': isInBasket(item.id) }">
+        {{ isInBasket(item.id) ? 'Kosárban' : 'Kosárba' }}
+      </button>
     </div>
   </div>
 </div>
@@ -103,8 +108,14 @@ export default {
   },
   methods: {
     addToBasket(item) {
-      this.basket.push(item);
-      localStorage.setItem('basket', JSON.stringify(this.basket));
+      if (!this.isInBasket(item.id)) {
+        this.basket.push(item);
+        localStorage.setItem('basket', JSON.stringify(this.basket));
+      }
+    },
+    
+    isInBasket(itemId) {
+      return this.basket.some(item => item.id === itemId);
     },
     
     fetchPopularProducts() {
@@ -200,15 +211,8 @@ body,
 }
 
 .sidebar,
-
-.popular-products {
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 10px;
-}
-
-.map-area
-{
+.popular-products,
+.map-area {
   background-color: #f8f9fa;
   padding: 1rem;
   border-radius: 10px;
@@ -218,13 +222,6 @@ body,
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
   position: relative;
 }
 
@@ -236,19 +233,16 @@ body,
   height: 100%;
 }
 
-
-
-
 .logo-container {
   margin-top: auto; 
   margin-bottom: 20px;
   text-align: center;
 }
 
-
 .logo {
-  width: 300px;
-  height: 250px;
+  width: 100%;
+  max-width: 250px;
+  height: auto;
 }
 
 .product-image {
@@ -266,6 +260,11 @@ body,
   border-radius: 0.25rem;
   text-decoration: none;
   border: none;
+}
+
+.button.in-basket {
+  background-color: #4CAF50;
+  color: white;
 }
 
 h1 {
@@ -293,10 +292,14 @@ h1 {
 }
 
 #location {
-
   text-align: center;
   font-weight: bold;
+}
 
+.card {
+  width: 100%;
+  max-width: 18rem;
+  margin-bottom: 1rem;
 }
 
 #menuimage {
@@ -323,5 +326,34 @@ h1 {
   margin-top: 10px;
 }
 
+/* === Media Queries for Responsiveness === */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar,
+  .map-area,
+  .popular-products {
+    width: 100%;
+  }
+  
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+}
 
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  .logo {
+    max-width: 200px;
+  }
+
+  .card {
+    max-width: 100%;
+  }
+}
 </style>

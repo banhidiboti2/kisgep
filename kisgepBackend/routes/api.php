@@ -14,6 +14,8 @@ Route::get('/termekek', [TermekController::class, 'index']);
 Route::get('/termekek/{id}', [TermekController::class, 'show']);
 
 
+
+
 Route::middleware('auth:sanctum')->post('/orders', [RendelesController::class, 'store']);
 
 Route::middleware('auth:sanctum')->group(function () {

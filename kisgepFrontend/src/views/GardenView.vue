@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold">Kerti Gépek</h1>
+      <h1 class="text-2xl font-bold">Kerti Gépek </h1>
       <router-link to="/" class="back-button">Vissza</router-link>
     </div>
 
@@ -166,7 +166,19 @@ export default {
 }
 
 .grid-cols-3 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 640px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .gap-4 {
@@ -179,9 +191,23 @@ export default {
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   text-decoration: none;
-  margin-left: auto; 
+  margin-left: auto;
   border: none;
   outline: none;
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .flex {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .back-button {
+    margin-left: 0;
+    margin-top: 10px;
+  }
 }
 
 .button {

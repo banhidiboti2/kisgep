@@ -170,7 +170,19 @@ export default {
 }
 
 .grid-cols-3 {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(1, 1fr);
+}
+
+@media (min-width: 640px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .gap-4 {
@@ -183,9 +195,23 @@ export default {
   padding: 0.5rem 1rem;
   border-radius: 0.25rem;
   text-decoration: none;
-  margin-left: auto; 
-  border: none;              
-  outline: none;             
+  margin-left: auto;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .flex {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .back-button {
+    margin-left: 0;
+    margin-top: 10px;
+  }
 }
 
 .button {
@@ -195,33 +221,12 @@ export default {
   border-radius: 0.25rem;
   text-decoration: none;
   margin-top: auto;
-  border: none;              
-  outline: none;             
+  border: none;
+  outline: none;
 }
 
 .button.in-basket {
   background-color: #4CAF50;
   color: white;
-}
-
-.notification {
-  position: fixed;
-  bottom: 20px;
-  left: 20px;
-  padding: 10px 15px;
-  border-radius: 3px;
-  color: white;
-  background-color: #333;
-  z-index: 1000;
-  max-width: 200px;
-}
-
-.notification.success {
-  background-color: #4CAF50;
-  color: white;
-}
-
-.notification.error {
-  background-color: #f44336;
 }
 </style>

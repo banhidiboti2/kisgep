@@ -35,16 +35,6 @@
         </div>
         
         <div class="order-section">
-          <h2>Megjegyzés a rendeléshez</h2>
-          <textarea 
-            v-model="orderComment" 
-            placeholder="Itt adhat meg megjegyzést a rendeléshez (opcionális)..."
-            class="order-comment"
-            rows="3"
-          ></textarea>
-        </div>
-        
-        <div class="order-section">
           <h2>Rendelési adatok</h2>
           
           <div class="form-group">

@@ -69,6 +69,11 @@ const routes = [
     path: '/order-confirmation',
     name: 'OrderConfirmation',
     component: OrderConfirmationView
+  },
+  {
+    path: '/admin-panel',
+    name: 'AdminPanel',
+    component: () => import('../views/AdminView.vue')
   }
 ]
 
