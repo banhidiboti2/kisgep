@@ -1,14 +1,14 @@
 Elemek elérési útvonalai:
 
--kisgepBackend/app/Models/ – Adatmodellek (pl. gépek, karbantartások)
+-kisgepBackend/app/Models/ – Adatmodellek 
 
--kisgepBackend/app/Http/Controllers/ – Backend vezérlők (API-logika)
+-kisgepBackend/app/Http/Controllers/ – Backend vezérlők 
 
 -kisgepBackend/database/migrations/ – Adatbázis sémák
 
 -kisgepBackend/routes/api.php – API végpontok definíciója
 
--kisgepFrontend/src/components/ – Frontend komponensek (Vue)
+-kisgepFrontend/src/components/ – Frontend komponensek 
 
 -kisgepFrontend/src/views/ – Felhasználói felület nézetei
 
